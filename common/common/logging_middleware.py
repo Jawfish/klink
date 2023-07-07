@@ -67,10 +67,16 @@ class FluentLoggerFastAPIMiddleware(BaseLogger):
     Usage:
         # Logging FastAPI requests
         app = FastAPI()
-        app.middleware('http')(FluentLoggerFastAPIMiddleware(app, fluentd_host, fluentd_port))
+        app.add_middleware(
+            FluentLoggerFastAPIMiddleware,
+            tag="test",
+            fluentd_host="localhost",
+            fluentd_port=24224
+        )
 
         # Logging application events
-        logger_middleware.log_event("startup", {"message": "Service started"})
+        logger = FluentLoggerFastAPIMiddleware("test", app, "localhost", 24224)
+        logger.log_event("startup", {"message": "Service started"})
     This middleware logs each FastAPI request to Fluentd. It is initialized with an
     event tag, a FastAPI application, and the host and port of the Fluentd server.
     After initialization, it automatically logs each HTTP request's method, URL, and
@@ -79,7 +85,7 @@ class FluentLoggerFastAPIMiddleware(BaseLogger):
 
     Additionally, it can be used to manually log custom events to Fluentd by calling
     the `log_event` method with an event tag and data dictionary.
-    """  # noqa: E501
+    """
 
     def __init__(
         self,
