@@ -3,15 +3,13 @@ name = "common"
 version = "0.1.0"
 description = ""
 authors = ["James Fitzgerald <james@jawfish.dev>"]
+packages = [{ include = "common" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 sqlalchemy = "^2.0.18"
-fastapi = "^0.99.1"
 fluent-logger = "^0.10.0"
-flask = "^2.3.2"
-httpx = "^0.24.1"
-
+python-dotenv = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.0.277"
