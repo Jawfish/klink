@@ -1,0 +1,106 @@
+[tool.poetry]
+name = "common"
+version = "0.1.0"
+description = ""
+authors = ["James Fitzgerald <james@jawfish.dev>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+sqlalchemy = "^2.0.18"
+fastapi = "^0.99.1"
+fluent-logger = "^0.10.0"
+flask = "^2.3.2"
+httpx = "^0.24.1"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.0.277"
+black = "^23.3.0"
+mypy = "^1.4.1"
+pytest-asyncio = "^0.21.0"
+pytest = "^7.4.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+target-version = ['py311']
+fast = true
+exclude = '''
+(
+  /(                        # exclude a few common directories in the
+    \.git                   # root of the project
+    | \.pytest_cache
+    | python-venv
+    | \.venv
+    | build
+    | dist
+    | \.tox
+  ))
+'''
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+disallow_untyped_defs = "True"
+disallow_any_unimported = "True"
+no_implicit_optional = "True"
+check_untyped_defs = "True"
+warn_return_any = "True"
+warn_unused_ignores = "True"
+show_error_codes = "True"
+exclude = ['.venv', '_test\.py$', 'noxfile.py']
+ignore_missing_imports = "True"
+
+[tool.ruff]
+line-length = 88
+# https://beta.ruff.rs/docs/rules/
+select = [
+  "A",   # builtins
+  "ANN", # annotations
+  "ARG", # unused arguments
+  "B",   # bugbear
+  "BLE", # blind-except
+  "C4",  # comprehensions
+  "C90", # mccabe
+  "COM", # commas
+  "DTZ", # datetimez
+  "E",   # pycodestyle errors
+  "EM",  # errmsg
+  "ERA", # eradicate
+  "F",   # pyflakes
+  "FBT", # boolean traps
+  "G",   # logging: https://google.github.io/styleguide/pyguide.html#3101-logging
+  "I",   # isort
+  "ICN", # import conventions
+  "INP", # no namespace packages
+  "ISC", # string concatenation
+  "N",   # naming
+  "PGH", # pygrep
+  "PIE", # misc errors
+  "PL",  # pylint
+  "PYI", # pyi
+  "RET", # return
+  "RET", # return
+  "RSE", # raise
+  "RUF", # ruff
+  "S",   # bandit
+  "SIM", # simplify
+  "T20", # print (prefer logging)
+  "TID", # tidy imports
+  "TCH", # type-checking
+  "TRY", # tryceratops
+  "UP",  # pyupgrade
+  "W",   # pycodestyle warnings
+]
+extend-exclude = ["*_test.py", "noxfile.py", "__init__.py"]
+ignore = [
+  "ANN101", # don't require type annotations for self
+  "ANN102", # don't require type annotations for cls
+  "B008",   # let FastAPI use functions as default arguments
+]
+
+[tool.ruff.pydocstyle]
+convention = "google"
