@@ -1,37 +1,41 @@
 import logging
 import logging.config
 import os
+from typing import NamedTuple
 
-from dotenv import load_dotenv
 from fluent import handler as fluent_handler
 
-load_dotenv()
+
+class LoggingConfig(NamedTuple):
+    service_name: str
+    logger_host: str
+    logger_port: int
+    logging_level: int = logging.INFO
+    local_log_dir: str = "logs"
 
 
-def configure_logging() -> None:
-    """Loads logger configuration from environment variables.
+def configure_logging(
+    config: LoggingConfig,
+) -> None:
+    """Configures Python's standard logging module for the service.
 
-    Environment variables used:
-        LOG_TAG: The logging tag. Default is "test".
-        LOG_HOST: The logging host. Default is "localhost".
-        LOG_PORT: The logging port. Default is 24224.
-        LOG_LEVEL: The logging level. Default is "INFO".
-
-    Note:
-        The logger configuration dictionary should be formatted according to the
-        specifications found in Python's logging.config.dictConfig documentation:
-        https://docs.python.org/3/library/logging.config.html#logging.config.dictConfig
+    Args:
+        service_name (str): The name of the service.
+        logger_host (str): The host of the logger.
+        logger_port (int): The port of the logger.
+        logging_level (logging.Level): The logging level to use.
     """
 
+    # https://docs.python.org/3/library/logging.config.html#logging.config.dictConfig
     logging_config = {
         "version": 1,
         "handlers": {
             "fluent": {
                 "class": "fluent.handler.FluentHandler",
                 "formatter": "fluent",
-                "tag": os.getenv("LOG_TAG", "test"),
-                "host": os.getenv("LOG_HOST", "localhost"),
-                "port": int(os.getenv("LOG_PORT", "24224")),
+                "tag": config.service_name,
+                "host": config.logger_host,
+                "port": config.logger_port,
             },
             "console": {
                 "class": "logging.StreamHandler",
@@ -42,7 +46,7 @@ def configure_logging() -> None:
                 "class": "logging.handlers.TimedRotatingFileHandler",
                 "formatter": "file",
                 "when": "midnight",
-                "filename": "logs/log.log",
+                "filename": f"{config.local_log_dir}/{config.service_name}.log",
             },
         },
         "formatters": {
@@ -74,12 +78,12 @@ def configure_logging() -> None:
             },
         },
         "root": {
-            "level": os.getenv("LOG_LEVEL", "INFO"),
+            "level": config.logging_level,
             "handlers": ["fluent", "console", "file"],
         },
     }
 
-    if not os.path.exists("logs"):
-        os.makedirs("logs")
+    if not os.path.exists(config.local_log_dir):
+        os.makedirs(config.local_log_dir)
 
     logging.config.dictConfig(logging_config)

@@ -1,65 +1,59 @@
-import pytest
-from .service_logging import create_logger, load_log_config
 import logging
-from logging import config
-from unittest.mock import patch
+import os
+from fluent.handler import FluentHandler
+from .service_logging import LoggingConfig, configure_logging
 
 
-def test_create_logger_provides_valid_logger_with_default_config():
-    with patch.object(config, "dictConfig") as mock_logging_config:
-        logger = create_logger()
-        assert isinstance(logger, logging.Logger)
-        mock_logging_config.assert_called_once_with(load_log_config())
+def test_configure_logging_with_valid_config(tmpdir):
+    configure_logging(
+        config=LoggingConfig(
+            service_name="test",
+            logger_host="localhost",
+            logger_port=24224,
+            logging_level=logging.DEBUG,
+            local_log_dir=str(tmpdir.join("test_logs")),
+        )
+    )
+
+    logger = logging.getLogger()
+    assert logger.level == logging.DEBUG
+    assert len(logger.handlers) == 3
+
+    assert any(isinstance(handler, FluentHandler) for handler in logger.handlers)
 
 
-def test_create_logger_provides_valid_logger_with_valid_config():
-    log_config = {
-        "version": 1,
-        "handlers": {
-            "fluent": {
-                "class": "fluent.handler.FluentHandler",
-                "tag": "app",
-                "host": "localhost",
-                "port": 24224,
-            },
-        },
-        "root": {
-            "level": "INFO",
-            "handlers": ["fluent"],
-        },
-    }
+def test_configure_logging_logs_to_file(tmpdir):
+    configure_logging(
+        config=LoggingConfig(
+            service_name="test",
+            logger_host="localhost",
+            logger_port=24224,
+            logging_level=logging.DEBUG,
+            local_log_dir=str(tmpdir.join("test_logs")),
+        )
+    )
 
-    with patch.object(config, "dictConfig") as mock_logging_config:
-        logger = create_logger(log_config)
-        mock_logging_config.assert_called_once_with(log_config)
+    logger = logging.getLogger()
 
-    assert isinstance(logger, logging.Logger)
+    file_handler = None
+    for handler in logger.handlers:
+        if isinstance(handler, logging.handlers.TimedRotatingFileHandler):
+            file_handler = handler
+            break
 
+    assert file_handler is not None
 
-def test_logger_logs_message():
-    log_config = {
-        "version": 1,
-        "handlers": {
-            "console": {
-                "class": "logging.StreamHandler",
-                "stream": "ext://sys.stdout",
-            },
-        },
-        "root": {
-            "level": "INFO",
-            "handlers": ["console"],
-        },
-    }
+    log_dir = os.path.dirname(file_handler.baseFilename)
+    expected_log_dir = "test_logs"
+    assert log_dir.endswith(expected_log_dir)
 
-    logger = create_logger(log_config)
+    log_file_path = file_handler.baseFilename
+    assert os.path.exists(log_file_path)
 
-    with patch.object(logger, "info") as mock_info:
-        logger.info("Test log message")
-        mock_info.assert_called_once_with("Test log message")
+    expected_log_message = "This is a test log message"
+    logger.info(expected_log_message)
 
+    with open(log_file_path, "r") as log_file:
+        log_contents = log_file.read()
 
-def test_create_logger_raises_error_with_invalid_config():
-    log_config = {"invalid": "config"}
-
-    with pytest.raises(Exception):
-        create_logger(log_config)
+    assert expected_log_message in log_contents
