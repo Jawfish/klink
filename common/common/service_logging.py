@@ -8,7 +8,7 @@ from fluent import handler as fluent_handler
 load_dotenv()
 
 
-def load_log_config() -> None:
+def configure_logging() -> None:
     """Loads logger configuration from environment variables.
 
     Environment variables used:
@@ -38,6 +38,12 @@ def load_log_config() -> None:
                 "stream": "ext://sys.stdout",
                 "formatter": "console",
             },
+            "file": {
+                "class": "logging.handlers.TimedRotatingFileHandler",
+                "formatter": "file",
+                "when": "midnight",
+                "filename": "logs/log.log",
+            },
         },
         "formatters": {
             "fluent": {
@@ -51,14 +57,29 @@ def load_log_config() -> None:
                 },
             },
             "console": {
-                "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
+                "()": "colorlog.ColoredFormatter",
+                "format": "%(log_color)s%(levelname)-8s | %(asctime)s | %(message)s",
+                "datefmt": "%Y-%m-%dT%H:%M:%S",
+                "log_colors": {
+                    "DEBUG": "cyan",
+                    "INFO": "green",
+                    "WARNING": "yellow",
+                    "ERROR": "bold,red",
+                    "CRITICAL": "bold,white,bg_red",
+                },
+            },
+            "file": {
+                "format": "%(levelname)-8s | %(asctime)s | %(message)s",
                 "datefmt": "%Y-%m-%dT%H:%M:%S",
             },
         },
         "root": {
             "level": os.getenv("LOG_LEVEL", "INFO"),
-            "handlers": ["fluent", "console"],
+            "handlers": ["fluent", "console", "file"],
         },
     }
+
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
 
     logging.config.dictConfig(logging_config)
