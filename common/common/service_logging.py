@@ -1,89 +1,55 @@
+import json
 import logging
 import logging.config
 import os
-from typing import NamedTuple
-
-from fluent import handler as fluent_handler
 
 
-class LoggingConfig(NamedTuple):
-    service_name: str
-    logger_host: str
-    logger_port: int
-    logging_level: int = logging.INFO
-    local_log_dir: str = "logs"
-
-
-def configure_logging(
-    config: LoggingConfig,
-) -> None:
-    """Configures Python's standard logging module for the service.
+def load_config_file(config_file: str) -> dict:
+    """Loads a JSON config file.
 
     Args:
-        service_name (str): The name of the service.
-        logger_host (str): The host of the logger.
-        logger_port (int): The port of the logger.
-        logging_level (logging.Level): The logging level to use.
+        config_file (str): Path to the JSON config file.
+
+    Returns:
+        dict: Loaded JSON data as a dictionary.
+
+    Raises:
+        FileNotFoundError: If the config file does not exist.
+        json.JSONDecodeError: If the config file is not valid JSON.
     """
+    try:
+        with open(config_file) as file:
+            return json.load(file)
+    except FileNotFoundError:
+        logging.exception("Configuration file %s not found.", config_file)
+        raise
+    except json.JSONDecodeError:
+        logging.exception(
+            "Failed to parse JSON from configuration file %s.",
+            config_file,
+        )
+        raise
 
-    # https://docs.python.org/3/library/logging.config.html#logging.config.dictConfig
-    logging_config = {
-        "version": 1,
-        "handlers": {
-            "fluent": {
-                "class": "fluent.handler.FluentHandler",
-                "formatter": "fluent",
-                "tag": config.service_name,
-                "host": config.logger_host,
-                "port": config.logger_port,
-            },
-            "console": {
-                "class": "logging.StreamHandler",
-                "stream": "ext://sys.stdout",
-                "formatter": "console",
-            },
-            "file": {
-                "class": "logging.handlers.TimedRotatingFileHandler",
-                "formatter": "file",
-                "when": "midnight",
-                "filename": f"{config.local_log_dir}/{config.service_name}.log",
-            },
-        },
-        "formatters": {
-            "fluent": {
-                "()": fluent_handler.FluentRecordFormatter,
-                "format": {
-                    "host": "%(hostname)s",
-                    "where": "%(module)s.%(funcName)s",
-                    "type": "%(levelname)s",
-                    "stack_trace": "%(exc_text)s",
-                    "message": "%(message)s",
-                },
-            },
-            "console": {
-                "()": "colorlog.ColoredFormatter",
-                "format": "%(log_color)s%(levelname)-8s | %(asctime)s | %(message)s",
-                "datefmt": "%Y-%m-%dT%H:%M:%S",
-                "log_colors": {
-                    "DEBUG": "cyan",
-                    "INFO": "green",
-                    "WARNING": "yellow",
-                    "ERROR": "bold,red",
-                    "CRITICAL": "bold,white,bg_red",
-                },
-            },
-            "file": {
-                "format": "%(levelname)-8s | %(asctime)s | %(message)s",
-                "datefmt": "%Y-%m-%dT%H:%M:%S",
-            },
-        },
-        "root": {
-            "level": config.logging_level,
-            "handlers": ["fluent", "console", "file"],
-        },
-    }
 
-    if not os.path.exists(config.local_log_dir):
-        os.makedirs(config.local_log_dir)
+def configure_logging(logging_config: dict) -> None:
+    """Configures Python's standard logging module according to provided configuration.
 
-    logging.config.dictConfig(logging_config)
+    The configuration should be a dictionary as expected by `logging.config.dictConfig`.
+
+    Args:
+        logging_config (dict): Logging configuration dictionary.
+
+    Raises:
+        ValueError: If the logging configuration is not valid.
+    """
+    if "handlers" in logging_config:
+        for handler in logging_config["handlers"].values():
+            if "filename" in handler:
+                dir_name = os.path.dirname(handler["filename"])
+                os.makedirs(dir_name, exist_ok=True)
+
+    try:
+        logging.config.dictConfig(logging_config)
+    except ValueError:
+        logging.exception("Invalid logging configuration.")
+        raise
