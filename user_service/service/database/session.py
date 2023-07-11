@@ -26,26 +26,26 @@ class SQLAlchemyConnector:
     def create_session(self) -> Generator[Session, None, None]:
         db_session: Session = self.session_factory()
         try:
-            logging.info("Creating database session")
+            logging.debug("Creating database session")
             yield db_session
-            logging.info("Committing database session")
+            logging.debug("Committing database session")
             db_session.commit()
-            logging.info("Database session committed")
+            logging.debug("Database session committed")
         except OperationalError as e:
             logging.exception("Error establishing a database connection")
             raise DatabaseConnectionError from e
         except SQLAlchemyError as e:
             logging.exception("Error committing database session")
             db_session.rollback()
-            logging.info("Database session rolled back")
+            logging.debug("Database session rolled back")
             raise TransactionCommitError from e
         finally:
-            logging.info("Closing database session")
+            logging.debug("Closing database session")
             db_session.close()
 
 
 def create_database_session() -> Generator[Session, None, None]:
-    logging.info("Creating database session")
+    logging.debug("Creating database session")
     # TODO: fail fast if database is not available (don't use a default value)
     try:
         db_connection = SQLAlchemyConnector(

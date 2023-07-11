@@ -75,3 +75,9 @@ class InvalidPasswordLengthError(ManagedException):
 
     status_code = HTTPStatus.BAD_REQUEST
     detail = msg.INVALID_PASSWORD_LENGTH_MSG
+
+class InvalidUsernameCharsError(ManagedException):
+    """Raised when the username contains invalid characters"""
+
+    status_code = HTTPStatus.BAD_REQUEST
+    detail = msg.INVALID_USERNAME_CHARS_MSG

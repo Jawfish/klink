@@ -13,3 +13,4 @@ INVALID_PASSWORD_LENGTH_MSG = f"Password must be between {MIN_PASSWORD_LENGTH} a
 USER_EXISTS_MSG = "User already exists"
 USER_CREATED_MSG = "User created successfully"
 GENERIC_INTERNAL_ERROR_MSG = "An internal error occurred while processing the request"
+INVALID_USERNAME_CHARS_MSG = "Username must only contain a-z, A-Z, 0-9, and _"

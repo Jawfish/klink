@@ -1,7 +1,10 @@
+import re
+
 from pydantic import BaseModel, validator
 
 from service.api.exceptions import (
     InvalidPasswordLengthError,
+    InvalidUsernameCharsError,
     InvalidUsernameLengthError,
 )
 from service.api.schema_consts import (
@@ -22,6 +25,8 @@ class UserIn(BaseModel):
         max_username_length = MAX_USERNAME_LENGTH
         if not min_username_length <= len(username) <= max_username_length:
             raise InvalidUsernameLengthError
+        if not re.match(r"^[a-zA-Z0-9_]+$", username):
+            raise InvalidUsernameCharsError
         return username
 
     @validator("password")
