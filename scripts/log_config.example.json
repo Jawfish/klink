@@ -1,0 +1,59 @@
+{
+    "formatters": {
+        "console": {
+            "()": "colorlog.ColoredFormatter",
+            "datefmt": "%Y-%m-%dT%H:%M:%S",
+            "format": "%(asctime)s | %(log_color)s%(levelname)-8s | %(reset)s%(module)s.%(filename)s:%(funcName)s:%(lineno)d - %(message)s%(reset)s",
+            "log_colors": {
+                "CRITICAL": "bold,white,bg_red",
+                "DEBUG": "cyan",
+                "ERROR": "bold,red",
+                "INFO": "green",
+                "WARNING": "yellow"
+            }
+        },
+        "file": {
+            "datefmt": "%Y-%m-%dT%H:%M:%S",
+            "format": "%(asctime)s | %(levelname)-8s | %(message)s"
+        },
+        "fluent": {
+            "()": "fluent.handler.FluentRecordFormatter",
+            "format": {
+                "host": "%(hostname)s",
+                "level": "%(levelname)s",
+                "message": "%(message)s",
+                "stack_trace": "%(exc_text)s",
+                "where": "%(module)s.%(funcName)s:%(lineno)d"
+            }
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "console",
+            "stream": "ext://sys.stdout"
+        },
+        "file": {
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "filename": "logs/service.log",
+            "formatter": "file",
+            "when": "midnight"
+        },
+        "fluent": {
+            "class": "fluent.handler.FluentHandler",
+            "formatter": "fluent",
+            "host": "10.0.0.2",
+            "port": 24224,
+            "tag": "service"
+        }
+    },
+    "root": {
+        "handlers": [
+            "fluent",
+            "console",
+            "file"
+        ],
+        "level": "INFO"
+    },
+    "version": 1
+}
