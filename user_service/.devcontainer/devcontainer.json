@@ -1,0 +1,50 @@
+{
+	"containerEnv": {},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-azuretools.vscode-docker",
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"charliermarsh.ruff",
+				"ms-python.black-formatter",
+				"tamasfe.even-better-toml"
+			],
+			"settings": {
+				"[python]": {
+					"editor.defaultFormatter": "ms-python.black-formatter"
+				},
+				"editor.codeActionsOnSave": {
+					"source.fixAll": true
+				},
+				"python.defaultInterpreterPath": ".venv/bin/python",
+				"python.formatting.provider": "none",
+				"python.terminal.activateEnvironment": true,
+				"ruff.interpreter": [
+					".venv/bin/python"
+				],
+				"ruff.run": "onSave"
+			}
+		}
+	},
+	"dockerComposeFile": "docker-compose.yml",
+	"features": {
+		"ghcr.io/devcontainers-contrib/features/poetry:2": {}
+	},
+	"forwardPorts": [
+		80,
+		5432
+	],
+	"name": "Klink User Service",
+	"portsAttributes": {
+		"5432": {
+			"label": "PostgreSQL"
+		},
+		"80": {
+			"label": "Klink User Service"
+		}
+	},
+	"postCreateCommand": "poetry install",
+	"service": "app",
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
+}
