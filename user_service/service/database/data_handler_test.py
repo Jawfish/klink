@@ -1,9 +1,6 @@
 import pytest
-from service.api.schema import UserIn
 from service.api.exceptions import (
     AuthenticationError,
-    UserAlreadyExistsError,
-    UserCreationError,
     UserDoesNotExistError,
 )
 from service.database.data_handler import DataHandler
@@ -13,7 +10,7 @@ from argon2 import PasswordHasher, exceptions
 ph = PasswordHasher()
 
 
-def test_verify_user_verifies_valid_user_data(db, valid_user_in):
+def test_verification_succeeds_with_valid_user_data(db, valid_user_in):
     data_handler = DataHandler(db)
     expected_user = User(
         username=valid_user_in.username,
@@ -28,16 +25,14 @@ def test_verify_user_verifies_valid_user_data(db, valid_user_in):
     assert ph.verify(user.hashed_password, valid_user_in.unhashed_password)
 
 
-def test_verify_user_raises_user_does_not_exist_error(db, valid_user_in):
+def test_verification_fails_for_non_existent_user(db, valid_user_in):
     data_handler = DataHandler(db)
 
     with pytest.raises(UserDoesNotExistError):
         data_handler.verify_user(valid_user_in)
 
 
-def test_verify_user_raises_authentication_error_with_mismatched_password(
-    db, valid_user_in
-):
+def test_mismatched_password_raises_exception(db, valid_user_in):
     data_handler = DataHandler(db)
     existing_user = User(
         username=valid_user_in.username,
@@ -50,19 +45,11 @@ def test_verify_user_raises_authentication_error_with_mismatched_password(
         data_handler.verify_user(valid_user_in)
 
 
-def test_create_user_creates_user_with_valid_data(db, valid_user_in):
+def test_test_user_creation_succeeds_with_valid_data(db, valid_user_in):
     pass
 
 
-def test_create_user_raises_user_already_exists_error_with_existing_user(
-    db, valid_user_in
-):
-    pass
-
-
-def test_create_user_raises_user_already_exists_error_with_existing_user(
-    db, valid_user_in
-):
+def test_test_existing_user_prevents_new_user_creation(db, valid_user_in):
     pass
 
 

@@ -3,14 +3,32 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from service.api.exception_handlers import handle_managed_exception
+from service.api.exceptions import ManagedException
 from service.api.schema import UserIn
 
 from service.database.session import Base
+
+import pytest
+from service.app.app_factory import create_app
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture
 def valid_user_in():
     return UserIn(username="TestUser", unhashed_password="password123")
+
+
+@pytest.fixture
+def app():
+    app = create_app()
+    app.add_exception_handler(ManagedException, handle_managed_exception)
+    return app
+
+
+@pytest.fixture
+def client(app):
+    return TestClient(app)
 
 
 @pytest.fixture

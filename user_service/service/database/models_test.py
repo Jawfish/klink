@@ -3,7 +3,7 @@ from service.api.exceptions import PasswordNotHashedError
 from service.database.models import User, ph
 
 
-def test_password_is_hashed(db):
+def test_saving_unhashed_password_raises_exception(db):
     non_hashed_password = "password123"
     user = User(username="TestUser", hashed_password=non_hashed_password)
     with pytest.raises(PasswordNotHashedError):
@@ -11,7 +11,7 @@ def test_password_is_hashed(db):
         db.commit()
 
 
-def test_ensure_password_is_hashed_works(db):
+def test_hashed_password_saves_successfully_in_database(db):
     hashed_password = ph.hash("password123")
     user = User(username="TestUser", hashed_password=hashed_password)
     db.add(user)
