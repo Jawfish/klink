@@ -11,8 +11,8 @@ from service.api.exceptions import (
     UserDoesNotExistError,
 )
 from service.api.schema import UserIn
-from service.database.data_handler import DataHandler
 from service.database.models import User
+from service.database.user_handler import UserHandler
 
 ph = PasswordHasher()
 
@@ -41,11 +41,11 @@ def verify_password(hashed_password: str, password: str) -> bool:
         raise InternalError from None
 
 
-def get_verified_user(user_in: UserIn, data_handler: DataHandler) -> User | None:
+def get_verified_user(user_in: UserIn, user_handler: UserHandler) -> User | None:
     username = user_in.username
 
     try:
-        user = data_handler.verify_user(username)
+        user = user_handler.get_if_password_matches(username)
     except UserDoesNotExistError:
         return None
 
@@ -59,12 +59,12 @@ def get_verified_user(user_in: UserIn, data_handler: DataHandler) -> User | None
 
 def get_token(
     user_in: UserIn,
-    data_handler: DataHandler,
+    user_handler: UserHandler,
     jwt_secret_key: str,
     jwt_algorithm: str = "HS256",
     expiry_minutes: int = 30,
 ) -> str:
-    user = get_verified_user(user_in.username, user_in.unhashed_password, data_handler)
+    user = get_verified_user(user_in.username, user_in.unhashed_password, user_handler)
 
     if not user:
         raise AuthenticationError(detail="Could not validate user to get token")

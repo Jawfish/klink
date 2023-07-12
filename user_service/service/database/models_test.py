@@ -1,13 +1,13 @@
 import pytest
+from common.api.exceptions.user_exceptions import PasswordNotHashedError
+from common.api.schemas.user_schema import UserAuthData
 from sqlalchemy.orm import Session
 
-from service.api.exceptions import PasswordNotHashedError
-from service.api.schema import UserIn
 from service.database.models import User, ph
 
 
 def test_saving_unhashed_password_raises_exception(
-    valid_user_in: UserIn,
+    valid_user_in: UserAuthData,
     db: Session,
 ) -> None:
     user = User(
@@ -20,7 +20,7 @@ def test_saving_unhashed_password_raises_exception(
 
 
 def test_hashed_password_saves_successfully_in_database(
-    valid_user_in: UserIn,
+    valid_user_in: UserAuthData,
     db: Session,
 ) -> None:
     hashed_password = ph.hash(valid_user_in.unhashed_password)

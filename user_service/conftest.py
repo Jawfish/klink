@@ -2,29 +2,32 @@ from collections.abc import Generator
 from typing import Any
 
 import pytest
+from common.api.exceptions.exception_handlers import handle_managed_exception
+from common.api.exceptions.managed_exception import ManagedException
+from common.api.schemas.user_schema import UserAuthData
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from service.api.exception_handlers import handle_managed_exception
-from service.api.exceptions import ManagedException
-from service.api.schema import UserIn
 from service.app.app_factory import create_app
-from service.database.data_handler import DataHandler, get_data_handler
 from service.database.session import Base
+from service.database.user_handler import UserHandler, get_user_handler
 
 
 @pytest.fixture
-def valid_user_in() -> UserIn:
-    return UserIn(username="TestUser", unhashed_password="password123")  # noqa: S106
+def valid_user_in() -> UserAuthData:
+    return UserAuthData(
+        username="TestUser",
+        unhashed_password="password123",  # noqa: S106
+    )
 
 
 @pytest.fixture
 def app(db: Session) -> FastAPI:
     app = create_app()
     app.add_exception_handler(ManagedException, handle_managed_exception)
-    app.dependency_overrides[get_data_handler] = lambda: DataHandler(db)
+    app.dependency_overrides[get_user_handler] = lambda: UserHandler(db)
     return app
 
 

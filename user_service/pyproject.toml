@@ -7,7 +7,7 @@ packages = [{ include = "service" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-fastapi = "^0.99.1"
+fastapi = "^0.100.0"
 httpx = "^0.24.1"
 uvicorn = "^0.22.0"
 argon2-cffi = "^21.3.0"
@@ -78,6 +78,7 @@ select = [
   "C4",  # comprehensions
   "C90", # mccabe
   "COM", # commas
+  "D",   # pydocstyle
   "DTZ", # datetimez
   "E",   # pycodestyle errors
   "EM",  # errmsg
@@ -111,6 +112,12 @@ ignore = [
   "ANN102", # don't require type annotations for cls
   "B008",   # let FastAPI use functions as default arguments
   "S101",   # allow use of assert (for pytest)
+  # code should be self-documenting, so they should not be forced
+  "D100", # don't require module-level docstrings
+  "D101", # don't require class-level docstrings
+  "D102", # don't require method-level docstrings
+  "D103", # don't require function-level docstrings
+  "D107", # don't require docstrings for __init__ methods
 ]
 unfixable = [
   "ERA", # don't auto-remove commented-out code

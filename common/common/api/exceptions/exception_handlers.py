@@ -1,9 +1,9 @@
+"""Exception handlers for the FastAPI application."""
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-from service.api.exceptions import (
-    ManagedException,
-)
+from common.api.exceptions.managed_exception import ManagedException
 
 
 async def handle_managed_exception(

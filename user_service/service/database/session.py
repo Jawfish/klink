@@ -2,12 +2,11 @@ import logging
 import os
 from collections.abc import Generator
 
+from common.api.exceptions.general_exceptions import InternalError
 from psycopg2 import OperationalError
 from sqlalchemy import create_engine, engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
-
-from service.api.exceptions import InternalError
 
 Base = declarative_base()
 

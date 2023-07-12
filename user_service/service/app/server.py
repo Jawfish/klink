@@ -1,12 +1,12 @@
 import logging
 import os
 
+from common.api.exceptions.exception_handlers import handle_managed_exception
+from common.api.exceptions.managed_exception import ManagedException
 from common.service_logging import configure_logging, load_config_file
 from fastapi import FastAPI
 from uvicorn import Config, Server
 
-from service.api.exception_handlers import handle_managed_exception
-from service.api.exceptions import ManagedException
 from service.app.app_factory import create_app
 
 

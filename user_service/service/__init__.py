@@ -1,4 +1,1 @@
-from .database.models import User
-
-# Import SQLAlchemy models for metadata.create_all()
-__all__ = [User]
+"""This service is responsible for handling requests to perform user operations."""
