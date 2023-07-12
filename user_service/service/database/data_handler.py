@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from service.api.exceptions import (
     AuthenticationError,
     UserAlreadyExistsError,
-    UserCreationError,
     UserDoesNotExistError,
 )
 from service.api.schema import UserIn
@@ -22,11 +21,13 @@ class DataHandler:
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def verify_user(self, user_in: UserIn) -> User:
-        user = self.db.query(User).filter(User.username == user_in.username).first()
+    def get_user_by_username(self, username: str) -> User:
+        return self.db.query(User).filter(User.username == username).first()
 
+    def verify_user(self, user_in: UserIn) -> User:
+        user = self.get_user_by_username(user_in.username)
         if user is None:
-            logging.debug("Tried to verify non-existent user %s", user_in.username)
+            logging.info("User %s does not exist", user_in.username)
             raise UserDoesNotExistError
 
         try:
@@ -40,21 +41,23 @@ class DataHandler:
             return user
 
     def create_user(self, user_in: UserIn) -> User:
-        if self.verify_user(user_in.username):
+        if self.get_user_by_username(user_in.username) is not None:
             logging.info("User %s already exists", user_in.username)
             raise UserAlreadyExistsError
 
         user = User(
             username=user_in.username,
-            unhashed_password=user_in.unhashed_password,
+            hashed_password=ph.hash(user_in.unhashed_password),
         )
 
+        self.db.add(user)
         try:
-            self.db.add(user)
+            self.db.commit()
             logging.info("User %s created", user_in.username)
         except IntegrityError:
             logging.exception("Error creating user %s", user_in.username)
-            raise UserCreationError from None
+            self.db.rollback()
+            raise
 
         return user
 

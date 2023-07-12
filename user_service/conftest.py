@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from service.api.exception_handlers import handle_managed_exception
 from service.api.exceptions import ManagedException
 from service.api.schema import UserIn
+from service.database.data_handler import DataHandler, get_data_handler
 
 from service.database.session import Base
 
@@ -20,9 +21,10 @@ def valid_user_in():
 
 
 @pytest.fixture
-def app():
+def app(db):
     app = create_app()
     app.add_exception_handler(ManagedException, handle_managed_exception)
+    app.dependency_overrides[get_data_handler] = lambda: DataHandler(db)
     return app
 
 

@@ -1,65 +1,40 @@
-import pytest
-from service.api.schema import UserOut
-from service.api.routes import create_user, verify_user
+from http import HTTPStatus
+from service.api.schema import UserIn, UserOut
+from service.api import exceptions as ex
 from service.database.data_handler import DataHandler
-from service.api.exceptions import (
-    UserAlreadyExistsError,
-    UserDoesNotExistError,
-)
 
 
-import uuid
+def test_user_creation_succeeds_with_valid_data(client, valid_user_in: UserIn):
+    response = client.post("/users", json=valid_user_in.dict())
+    assert response.status_code == HTTPStatus.CREATED
+    data = response.json()
+    assert data["username"] == valid_user_in.username
+    assert "uuid" in data
 
 
-@pytest.fixture
-def mock_data_handler(mocker):
-    return mocker.Mock(spec=DataHandler)
+def test_existing_user_prevents_new_user_creation(client, valid_user_in: UserIn):
+    client.post("/users", json=valid_user_in.dict())
+    response = client.post("/users", json=valid_user_in.dict())
+    assert response.status_code == ex.UserAlreadyExistsError.status_code
 
 
-class MockUserOut:
-    def __init__(self, username, uuid):
-        self.username = username
-        self.uuid = uuid
+def test_user_verification_succeeds_with_valid_data(db, client, valid_user_in: UserIn):
+    # create user directly in the database so we can verify it
+    # use the data_handler to create the user instead of the route
+    # to decouple this test from the user creation route test
+    data_handler = DataHandler(db)
+    data_handler.create_user(valid_user_in)
+
+    response = client.post("/users/verify", json=valid_user_in.dict())
+    assert response.status_code == 200
+    data = response.json()
+    assert data["username"] == valid_user_in.username
+    assert "uuid" in data
 
 
-class MockVerifyUserOut:
-    def __init__(self, username, uuid):
-        self.username = username
-        self.uuid = uuid
-
-
-def test_user_creation_succeeds_with_valid_data(mock_data_handler, valid_user_in):
-    mock_user = MockUserOut(username="TestUser", uuid=uuid.uuid4())
-    mock_data_handler.create_user.return_value = mock_user
-
-    response = create_user(valid_user_in, mock_data_handler)
-
-    mock_data_handler.create_user.assert_called_once()
-    assert response == UserOut(username=mock_user.username, uuid=mock_user.uuid)
-
-
-def test_existing_user_prevents_new_user_creation(mock_data_handler, valid_user_in):
-    mock_data_handler.create_user.side_effect = UserAlreadyExistsError()
-
-    with pytest.raises(UserAlreadyExistsError):
-        create_user(valid_user_in, mock_data_handler)
-
-
-def test_user_verification_succeeds_with_valid_data(mock_data_handler, valid_user_in):
-    mock_verify_user = MockVerifyUserOut(username="TestUser", uuid=uuid.uuid4())
-    mock_data_handler.verify_user.return_value = mock_verify_user
-
-    response = verify_user(valid_user_in, mock_data_handler)
-
-    mock_data_handler.verify_user.assert_called_once()
-
-    assert response == UserOut(
-        username=mock_verify_user.username, uuid=mock_verify_user.uuid
+def test_non_existent_user_cannot_be_verified(client):
+    non_existent_user = UserIn(
+        username="non_existent_user", unhashed_password="password"
     )
-
-
-def test_non_existent_user_cannot_be_verified(mock_data_handler, valid_user_in):
-    mock_data_handler.verify_user.side_effect = UserDoesNotExistError()
-
-    with pytest.raises(UserDoesNotExistError):
-        verify_user(valid_user_in, mock_data_handler)
+    response = client.post("/users/verify", json=non_existent_user.dict())
+    assert response.status_code == ex.UserDoesNotExistError.status_code

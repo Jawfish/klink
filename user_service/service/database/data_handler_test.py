@@ -1,6 +1,7 @@
 import pytest
 from service.api.exceptions import (
     AuthenticationError,
+    UserAlreadyExistsError,
     UserDoesNotExistError,
 )
 from service.database.data_handler import DataHandler
@@ -45,12 +46,25 @@ def test_mismatched_password_raises_exception(db, valid_user_in):
         data_handler.verify_user(valid_user_in)
 
 
-def test_test_user_creation_succeeds_with_valid_data(db, valid_user_in):
-    pass
+def test_user_creation_succeeds_with_valid_data(db, valid_user_in):
+    data_handler = DataHandler(db)
+
+    user = data_handler.create_user(valid_user_in)
+
+    assert user is not None
+    assert user.username == valid_user_in.username
+    assert ph.verify(user.hashed_password, valid_user_in.unhashed_password)
 
 
-def test_test_existing_user_prevents_new_user_creation(db, valid_user_in):
-    pass
+def test_existing_user_prevents_new_user_creation(db, valid_user_in):
+    data_handler = DataHandler(db)
+
+    user = data_handler.create_user(valid_user_in)
+    assert user is not None
+    assert user.username == valid_user_in.username
+
+    with pytest.raises(UserAlreadyExistsError):
+        data_handler.create_user(valid_user_in)
 
 
 # def test_create_user(db, user_in):

@@ -8,6 +8,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.sql.sqltypes import DateTime
 
 from service.api.exceptions import PasswordNotHashedError
+from service.api.schema import UserOut
 from service.database.session import Base
 
 ph = PasswordHasher()
@@ -33,6 +34,9 @@ class User(Base):
         DateTime(timezone=True),
         onupdate=func.now(),
     )
+
+    def to_user_out(self) -> UserOut:
+        return UserOut(username=self.username, uuid=str(self.uuid))
 
 
 def ensure_password_is_hashed(
