@@ -16,7 +16,7 @@ jwt = "^1.3.1"
 python-dotenv = "^1.0.0"
 common = { path = "../common" }
 psycopg2 = "^2.9.6"
-passlib = {extras = ["argon2"], version = "^1.7.4"}
+passlib = { extras = ["argon2"], version = "^1.7.4" }
 
 
 [tool.poetry.group.dev.dependencies]
@@ -63,7 +63,7 @@ check_untyped_defs = "True"
 warn_return_any = "True"
 warn_unused_ignores = "True"
 show_error_codes = "True"
-exclude = ['.venv', '_test\.py$', 'noxfile.py']
+exclude = ['.venv']
 ignore_missing_imports = "True"
 
 [tool.ruff]
@@ -106,11 +106,11 @@ select = [
   "UP",  # pyupgrade
   "W",   # pycodestyle warnings
 ]
-extend-exclude = ["*_test.py", "noxfile.py", "__init__.py"]
 ignore = [
   "ANN101", # don't require type annotations for self
   "ANN102", # don't require type annotations for cls
   "B008",   # let FastAPI use functions as default arguments
+  "S101",   # allow use of assert (for pytest)
 ]
 unfixable = [
   "ERA", # don't auto-remove commented-out code

@@ -6,7 +6,6 @@ from service.api.schema import UserIn, UserOut
 from service.database.data_handler import DataHandler, get_data_handler
 
 router = APIRouter()
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
 
 @router.post("/users", status_code=HTTPStatus.CREATED)
@@ -27,6 +26,9 @@ def verify_user(
     user = data_handler.verify_user(user_in)
 
     return user.to_user_out()
+
+
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
 
 # @router.post("/token", status_code=HTTPStatus.OK)
