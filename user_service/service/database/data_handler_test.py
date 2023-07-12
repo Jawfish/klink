@@ -1,17 +1,23 @@
 import pytest
+from argon2 import PasswordHasher
+from sqlalchemy.orm import Session
+
 from service.api.exceptions import (
     AuthenticationError,
     UserAlreadyExistsError,
     UserDoesNotExistError,
 )
+from service.api.schema import UserIn
 from service.database.data_handler import DataHandler
 from service.database.models import User
-from argon2 import PasswordHasher, exceptions
 
 ph = PasswordHasher()
 
 
-def test_verification_succeeds_with_valid_user_data(db, valid_user_in):
+def test_verification_succeeds_with_valid_user_data(
+    db: Session,
+    valid_user_in: UserIn,
+) -> None:
     data_handler = DataHandler(db)
     expected_user = User(
         username=valid_user_in.username,
@@ -26,14 +32,20 @@ def test_verification_succeeds_with_valid_user_data(db, valid_user_in):
     assert ph.verify(user.hashed_password, valid_user_in.unhashed_password)
 
 
-def test_verification_fails_for_non_existent_user(db, valid_user_in):
+def test_verification_fails_for_non_existent_user(
+    db: Session,
+    valid_user_in: UserIn,
+) -> None:
     data_handler = DataHandler(db)
 
     with pytest.raises(UserDoesNotExistError):
         data_handler.verify_user(valid_user_in)
 
 
-def test_mismatched_password_raises_exception(db, valid_user_in):
+def test_mismatched_password_raises_exception(
+    db: Session,
+    valid_user_in: UserIn,
+) -> None:
     data_handler = DataHandler(db)
     existing_user = User(
         username=valid_user_in.username,
@@ -46,7 +58,10 @@ def test_mismatched_password_raises_exception(db, valid_user_in):
         data_handler.verify_user(valid_user_in)
 
 
-def test_user_creation_succeeds_with_valid_data(db, valid_user_in):
+def test_user_creation_succeeds_with_valid_data(
+    db: Session,
+    valid_user_in: UserIn,
+) -> None:
     data_handler = DataHandler(db)
 
     user = data_handler.create_user(valid_user_in)
@@ -56,7 +71,9 @@ def test_user_creation_succeeds_with_valid_data(db, valid_user_in):
     assert ph.verify(user.hashed_password, valid_user_in.unhashed_password)
 
 
-def test_existing_user_prevents_new_user_creation(db, valid_user_in):
+def test_existing_user_prevents_new_user_creation(
+    db: Session, valid_user_in: UserIn,
+) -> None:
     data_handler = DataHandler(db)
 
     user = data_handler.create_user(valid_user_in)

@@ -1,19 +1,30 @@
 import pytest
+from sqlalchemy.orm import Session
+
 from service.api.exceptions import PasswordNotHashedError
+from service.api.schema import UserIn
 from service.database.models import User, ph
 
 
-def test_saving_unhashed_password_raises_exception(db):
-    non_hashed_password = "password123"
-    user = User(username="TestUser", hashed_password=non_hashed_password)
+def test_saving_unhashed_password_raises_exception(
+    valid_user_in: UserIn,
+    db: Session,
+) -> None:
+    user = User(
+        username=valid_user_in.username,
+        hashed_password=valid_user_in.unhashed_password,
+    )
     with pytest.raises(PasswordNotHashedError):
         db.add(user)
         db.commit()
 
 
-def test_hashed_password_saves_successfully_in_database(db):
-    hashed_password = ph.hash("password123")
-    user = User(username="TestUser", hashed_password=hashed_password)
+def test_hashed_password_saves_successfully_in_database(
+    valid_user_in: UserIn,
+    db: Session,
+) -> None:
+    hashed_password = ph.hash(valid_user_in.unhashed_password)
+    user = User(username=valid_user_in.username, hashed_password=hashed_password)
     db.add(user)
     db.commit()
     user_from_db = db.query(User).filter_by(username="TestUser").first()

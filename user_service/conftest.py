@@ -1,27 +1,27 @@
-# flake8: noqa: ANN001
+from collections.abc import Generator
+from typing import Any
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
+
 from service.api.exception_handlers import handle_managed_exception
 from service.api.exceptions import ManagedException
 from service.api.schema import UserIn
+from service.app.app_factory import create_app
 from service.database.data_handler import DataHandler, get_data_handler
-
 from service.database.session import Base
 
-import pytest
-from service.app.app_factory import create_app
-from fastapi.testclient import TestClient
+
+@pytest.fixture
+def valid_user_in() -> UserIn:
+    return UserIn(username="TestUser", unhashed_password="password123")  # noqa: S106
 
 
 @pytest.fixture
-def valid_user_in():
-    return UserIn(username="TestUser", unhashed_password="password123")
-
-
-@pytest.fixture
-def app(db):
+def app(db: Session) -> FastAPI:
     app = create_app()
     app.add_exception_handler(ManagedException, handle_managed_exception)
     app.dependency_overrides[get_data_handler] = lambda: DataHandler(db)
@@ -29,12 +29,14 @@ def app(db):
 
 
 @pytest.fixture
-def client(app):
+def client(
+    app: FastAPI,
+) -> TestClient:
     return TestClient(app)
 
 
 @pytest.fixture
-def db(postgresql):
+def db(postgresql: Any) -> Generator[Session, None, None]:  # noqa: ANN401
     session = sessionmaker(autocommit=False, autoflush=False)
     dsn = postgresql.info.dsn
     dsn_dict = dict(s.split("=") for s in dsn.split())
