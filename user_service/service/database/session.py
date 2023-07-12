@@ -7,7 +7,7 @@ from sqlalchemy import create_engine, engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
-from service.database.exceptions import DatabaseConnectionError, TransactionCommitError
+from service.api.exceptions import InternalError
 
 Base = declarative_base()
 
@@ -26,21 +26,17 @@ class SQLAlchemyConnector:
     def create_session(self) -> Generator[Session, None, None]:
         db_session: Session = self.session_factory()
         try:
-            logging.debug("Creating database session")
             yield db_session
-            logging.debug("Committing database session")
             db_session.commit()
-            logging.debug("Database session committed")
-        except OperationalError as e:
+        except OperationalError:
             logging.exception("Error establishing a database connection")
-            raise DatabaseConnectionError from e
-        except SQLAlchemyError as e:
-            logging.exception("Error committing database session")
+            raise
+        except SQLAlchemyError:
+            msg = "Error committing database session"
+            logging.exception(msg)
             db_session.rollback()
-            logging.debug("Database session rolled back")
-            raise TransactionCommitError from e
+            raise InternalError(msg) from None
         finally:
-            logging.debug("Closing database session")
             db_session.close()
 
 

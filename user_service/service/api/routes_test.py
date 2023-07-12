@@ -1,17 +1,31 @@
 import pytest
-from service.api.schema import UserIn
-from service.api.routes import create_user
+from service.api.schema import UserIn, UserOut
+from service.api.routes import create_user, verify_user
 from service.database.data_handler import DataHandler
 from service.api.exceptions import (
-    InvalidUsernameLengthError,
+    EmptyFieldError,
     ManagedException,
     UserAlreadyExistsError,
+    UserDoesNotExistError,
 )
-from fastapi.testclient import TestClient
-from service.app_factory import create_app
 
-from service.api import messages as msg
-from service.exception_handlers import handle_managed_exception
+from fastapi.testclient import TestClient
+from service.app.app_factory import create_app
+
+from service.api.exception_handlers import handle_managed_exception
+import uuid
+
+
+class MockUserOut:
+    def __init__(self, username, uuid):
+        self.username = username
+        self.uuid = uuid
+
+
+class MockVerifyUserOut:
+    def __init__(self, username, uuid):
+        self.username = username
+        self.uuid = uuid
 
 
 @pytest.fixture
@@ -33,16 +47,17 @@ def mock_data_handler(mocker):
 
 @pytest.fixture
 def user_in():
-    return UserIn(username="TestUser", password="TestPassword")
+    return UserIn(username="TestUser", unhashed_password="TestPassword")
 
 
 def test_create_user_success(mock_data_handler, user_in):
-    mock_data_handler.create_user.return_value = None
+    mock_user = MockUserOut(username="TestUser", uuid=uuid.uuid4())
+    mock_data_handler.create_user.return_value = mock_user
 
     response = create_user(user_in, mock_data_handler)
 
     mock_data_handler.create_user.assert_called_once()
-    assert response == {"message": msg.USER_CREATED_MSG}
+    assert response == UserOut(username=mock_user.username, uuid=mock_user.uuid)
 
 
 def test_create_user_user_exists(mock_data_handler, user_in):
@@ -54,20 +69,22 @@ def test_create_user_user_exists(mock_data_handler, user_in):
     mock_data_handler.create_user.assert_called_once()
 
 
-def test_create_user_empty_username(mock_data_handler, client):
-    response = client.post("/user/", json={"username": "", "password": "TestPassword"})
+def test_verify_user_success(mock_data_handler, user_in):
+    mock_verify_user = MockVerifyUserOut(username="TestUser", uuid=uuid.uuid4())
+    mock_data_handler.verify_user.return_value = mock_verify_user
 
-    assert response.status_code == 400
-    assert response.json() == {"detail": msg.INVALID_USERNAME_LENGTH_MSG}
+    response = verify_user(user_in, mock_data_handler)
 
-    mock_data_handler.get_user.assert_not_called()
-    mock_data_handler.create_user.assert_not_called()
+    mock_data_handler.verify_user.assert_called_once()
+    assert response == UserOut(
+        username=mock_verify_user.username, uuid=mock_verify_user.uuid
+    )
 
 
-def test_create_user_empty_password(mock_data_handler, client):
-    response = client.post("/user/", json={"username": "TestUser", "password": ""})
+def test_verify_user_failure(mock_data_handler, user_in):
+    mock_data_handler.verify_user.side_effect = UserDoesNotExistError()
 
-    assert response.status_code == 400
-    assert response.json() == {"detail": msg.INVALID_PASSWORD_LENGTH_MSG}
-    mock_data_handler.get_user.assert_not_called()
-    mock_data_handler.create_user.assert_not_called()
+    with pytest.raises(UserDoesNotExistError):
+        verify_user(user_in, mock_data_handler)
+
+    mock_data_handler.verify_user.assert_called_once()

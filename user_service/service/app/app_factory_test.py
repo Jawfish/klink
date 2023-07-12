@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 import pytest
-from service.app_factory import create_app
+from service.app.app_factory import create_app
 
 
 @pytest.fixture(scope="module")

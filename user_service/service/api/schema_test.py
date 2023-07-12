@@ -1,81 +1,58 @@
 import pytest
-
-from service.api.schema import UserIn
-from service.api.exceptions import (
-    InvalidPasswordLengthError,
-    InvalidUsernameLengthError,
-    InvalidUsernameCharsError,
-)
-from service.api.schema_consts import (
-    MAX_PASSWORD_LENGTH,
-    MAX_USERNAME_LENGTH,
-    MIN_PASSWORD_LENGTH,
-    MIN_USERNAME_LENGTH,
-)
+import uuid
+from service.api.schema import UserIn, UserOut
+from service.api.exceptions import EmptyFieldError
 
 
-invalid_usernames = [
-    ("", InvalidUsernameLengthError),
-    ("   ", InvalidUsernameCharsError),
-    ("a" * (MIN_USERNAME_LENGTH - 1), InvalidUsernameLengthError),
-    ("a" * (MAX_USERNAME_LENGTH + 1), InvalidUsernameLengthError),
-    (" valid_username ", InvalidUsernameCharsError),
-    ("valid username", InvalidUsernameCharsError),
-    ("valid_username$", InvalidUsernameCharsError),
-    ("valid_username_ä", InvalidUsernameCharsError),
-]
-
-valid_usernames = [
-    "a" * MIN_USERNAME_LENGTH,
-    "a" * MAX_USERNAME_LENGTH,
-    "valid_username",
-    "valid_username_1",
-    "valid_username_1_2_3",
-    "1234567890",
-]
-
-invalid_passwords = [
-    ("", InvalidPasswordLengthError),
-    ("a" * (MIN_PASSWORD_LENGTH - 1), InvalidPasswordLengthError),
-    ("a" * (MAX_PASSWORD_LENGTH + 1), InvalidPasswordLengthError),
-]
-
-valid_passwords = [
-    "a" * MIN_PASSWORD_LENGTH,
-    "a" * MAX_PASSWORD_LENGTH,
-    "valid_password",
-    "!@#$%^&*()_+~",
-    "          ",
-]
+@pytest.fixture
+def valid_password():
+    return "TestPassword"
 
 
-@pytest.mark.parametrize("username", valid_usernames)
-@pytest.mark.parametrize("password", valid_passwords)
-def test_user_in_schema_valid_input(username, password):
-    user = UserIn(username=username, password=password)
-    assert user.username == username
-    assert user.password == password
+@pytest.fixture
+def valid_username():
+    return "TestUser"
 
 
-@pytest.mark.parametrize("username,exception", invalid_usernames)
-def test_user_in_schema_invalid_username(username, exception):
-    with pytest.raises(exception):
-        UserIn(username=username, password="valid_password")
+@pytest.fixture
+def valid_uuid():
+    return uuid.uuid4()
 
 
-@pytest.mark.parametrize("username", valid_usernames)
-def test_user_in_schema_valid_username(username):
-    user = UserIn(username=username, password="valid_password")
-    assert user.username == username
+def test_user_in_validation_succeeds_with_valid_input(valid_username, valid_password):
+    user_in = UserIn(username=valid_username, unhashed_password=valid_password)
+
+    assert user_in.username == "TestUser"
+    assert user_in.unhashed_password == valid_password
 
 
-@pytest.mark.parametrize("password,exception", invalid_passwords)
-def test_user_in_schema_invalid_password(password, exception):
-    with pytest.raises(exception):
-        UserIn(username="valid_username", password=password)
+def test_user_in_empty_username_raises_empty_field_exception(valid_password):
+    with pytest.raises(EmptyFieldError):
+        UserIn(username="", unhashed_password=valid_password)
 
 
-@pytest.mark.parametrize("password", valid_passwords)
-def test_user_in_schema_valid_password(password):
-    user = UserIn(username="valid_username", password=password)
-    assert user.password == password
+def test_user_in_empty_password_raises_empty_field_exception(valid_username):
+    with pytest.raises(EmptyFieldError):
+        UserIn(username=valid_username, unhashed_password="")
+
+
+def test_user_in_empty_username_and_password_raises_empty_field_exception():
+    with pytest.raises(EmptyFieldError):
+        UserIn(username="", unhashed_password="")
+
+
+def test_user_out_validation_succeeds_with_valid_input(valid_uuid, valid_username):
+    user_out = UserOut(uuid=valid_uuid, username=valid_username)
+
+    assert user_out.username == "TestUser"
+    assert user_out.uuid == valid_uuid
+
+
+def test_user_out_model_raises_validation_error_with_invalid_uuid(valid_username):
+    with pytest.raises(ValueError):
+        UserOut(uuid="invalid_uuid", username=valid_username)
+
+
+def test_user_out_model_raises_validation_error_with_empty_username(valid_uuid):
+    with pytest.raises(ValueError):
+        UserOut(uuid=valid_uuid, username="")

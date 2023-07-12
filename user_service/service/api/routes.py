@@ -1,59 +1,42 @@
-from argon2 import PasswordHasher
-from fastapi import APIRouter, Depends
+from http import HTTPStatus
 
-from service.api import messages as msg
-from service.api.schema import UserIn
+from fastapi import APIRouter, Depends
+from fastapi.security import OAuth2PasswordBearer
+
+from service.api.schema import UserIn, UserOut
 from service.database.data_handler import DataHandler, get_data_handler
 
-ph = PasswordHasher()
 router = APIRouter()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
 
-@router.post("/user/", status_code=201)
+@router.post("/users", status_code=HTTPStatus.CREATED)
 def create_user(
     user_in: UserIn,
     data_handler: DataHandler = Depends(get_data_handler),
+) -> UserOut:
+    user = data_handler.create_user(user_in)
+
+    return UserOut(username=user.username, uuid=user.uuid)
+
+
+@router.post("/users/verify", status_code=HTTPStatus.OK)
+def verify_user(
+    user_in: UserIn,
+    data_handler: DataHandler = Depends(get_data_handler),
 ) -> dict:
-    hashed_password = ph.hash(user_in.password)
-    data_handler.create_user(user_in.username, hashed_password)
+    user = data_handler.verify_user(user_in)
 
-    return {"message": msg.USER_CREATED_MSG}
-
-
-# import datetime
-# import os
-
-# import jwt
-# from common.database_middleware import get_db
-# from dotenv import load_dotenv
-
-# load_dotenv()
-
-# SECRET_KEY = os.getenv("SECRET_KEY")
-
-# @router.get("/user/{username}")
-# def get_user(username: str, db: Session = Depends(get_db)):
-#     user = db.query(User).filter(User.username == username).first()
-#     if user is not None:
-#         return {"username": user.username}
-#     # auth errors are kept intentionally vague so attackers can't enumerate users
-#     return {"message": "Invalid credentials"}
+    return UserOut(username=user.username, uuid=user.uuid)
 
 
-# @router.post("/token/")
-# def login(login_data: UserIn, db: Session = Depends(get_db)):
-#     user = db.query(User).filter(User.username == login_data.username).first()
-#     if user is None:
-#         # return 400 instead of 404 for obscurity purposes
-#         raise HTTPException(status_code=401, detail="Invalid credentials")
-#     try:
-#         ph.verify(user.password, login_data.password)
-#     except exceptions.VerifyMismatchError:
-#         raise HTTPException(status_code=401, detail="Invalid credentials")
-
-#     token_data = {
-#         "sub": user.username,
-#         "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=30),
-#     }
-#     token = jwt.encode(token_data, SECRET_KEY, algorithm="HS256")
-#     return {"access_token": token}
+# @router.post("/token", status_code=HTTPStatus.OK)
+# def login(
+#     user_in: UserIn,
+#     data_handler: DataHandler = Depends(get_data_handler),
+#     jwt_secret_key: str = Depends(get_secret_key),
+# ) -> dict:
+#     user = data_handler.verify_user(user_in.username)
+#     if not verify_password(user.password, user_in.hashed_password):
+#         return {"message": msg.INVALID_CREDENTIALS_MSG}
+#     return {"token": get_token(user_in, data_handler, jwt_secret_key)}

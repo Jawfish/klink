@@ -5,9 +5,9 @@ from common.service_logging import configure_logging, load_config_file
 from fastapi import FastAPI
 from uvicorn import Config, Server
 
+from service.api.exception_handlers import handle_managed_exception
 from service.api.exceptions import ManagedException
-from service.app_factory import create_app
-from service.exception_handlers import handle_managed_exception
+from service.app.app_factory import create_app
 
 
 def run_server(app: FastAPI, host: str, port: int, log_config: dict) -> None:

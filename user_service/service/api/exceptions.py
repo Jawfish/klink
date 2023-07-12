@@ -1,7 +1,5 @@
 from http import HTTPStatus
 
-from service.api import messages as msg
-
 
 class ManagedException(Exception):  # noqa: N818
     """
@@ -15,25 +13,26 @@ class ManagedException(Exception):  # noqa: N818
         status_code = 409
         detail = "User already exists"
     ```
-    **Adding an exception handler:**
-    ```python
-    async def handle_managed_exception(exc):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.detail},
-    )
-    ```
 
     **Associating a handler with the exception:**
 
-    - Option 1 (using the `exception_handler` decorator):
+    1. Create a handler:
+        ```python
+        async def handle_managed_exception(exc):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+        )
+        ```
+    2. Associate the handler with the exception:
+        - Option 1 (using the `exception_handler` decorator):
 
         ```python
         @app.exception_handler(ManagedException)
         async def handle_managed_exception(request, exc):
             return exc.handler(request)
         ```
-    - Option 2 (explicitly adding the handler to the app):
+        - Option 2 (explicitly adding the handler to the app):
 
         ```python
         app = FastAPI()
@@ -60,24 +59,46 @@ class UserAlreadyExistsError(ManagedException):
     """Raised when the user already exists in the database"""
 
     status_code = HTTPStatus.CONFLICT
-    detail = msg.USER_EXISTS_MSG
+    detail = "User already exists"
 
 
-class InvalidUsernameLengthError(ManagedException):
-    """Raised when the username is too short"""
+class AuthenticationError(ManagedException):
+    """Raised when the user cannot be authenticated"""
+
+    status_code = HTTPStatus.UNAUTHORIZED
+    detail = "User could not be authenticated"
+
+
+class InternalError(ManagedException):
+    """Raised when an internal error occurs, but we don't want to leak details"""
+
+    status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+    detail = "Internal error"
+
+
+class UserDoesNotExistError(ManagedException):
+    """Raised when the user does not exist in the database"""
+
+    status_code = HTTPStatus.NOT_FOUND
+    detail = "User does not exist"
+
+
+class EmptyFieldError(ManagedException):
+    """Raised when a required field is empty"""
 
     status_code = HTTPStatus.BAD_REQUEST
-    detail = msg.INVALID_USERNAME_LENGTH_MSG
+    detail = "Required field is empty"
 
 
-class InvalidPasswordLengthError(ManagedException):
-    """Raised when the password is too short"""
+class UserCreationError(ManagedException):
+    """Raised when the user could not be created in the database"""
+
+    status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+    detail = "User could not be created"
+
+
+class PasswordNotHashedError(ManagedException):
+    """Raised when the provided password is not a valid argon2 hash"""
 
     status_code = HTTPStatus.BAD_REQUEST
-    detail = msg.INVALID_PASSWORD_LENGTH_MSG
-
-class InvalidUsernameCharsError(ManagedException):
-    """Raised when the username contains invalid characters"""
-
-    status_code = HTTPStatus.BAD_REQUEST
-    detail = msg.INVALID_USERNAME_CHARS_MSG
+    detail = "Password not hashed"
