@@ -26,18 +26,3 @@ def verify_user(
     user = user_handler.get_if_password_matches(user_in)
 
     return user.to_user_out()
-
-
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
-
-
-# @router.post("/token", status_code=HTTPStatus.OK)
-# def login(
-#     user_in: UserAuthData,
-#     user_handler: UserHandler = Depends(get_user_handler),
-#     jwt_secret_key: str = Depends(get_secret_key),
-# ) -> dict:
-#     user = user_handler.verify_user(user_in.username)
-#     if not verify_password(user.password, user_in.hashed_password):
-#         return {"message": msg.INVALID_CREDENTIALS_MSG}
-#     return {"token": get_token(user_in, user_handler, jwt_secret_key)}

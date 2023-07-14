@@ -4,6 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["James Fitzgerald <james@jawfish.dev>"]
 packages = [{ include = "common" }]
+include = ["common/config/**/*"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -12,17 +13,20 @@ fluent-logger = "^0.10.0"
 python-dotenv = "^1.0.0"
 colorlog = "^6.7.0"
 fastapi = "^0.100.0"
+uvicorn = "^0.22.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.0.277"
 black = "^23.3.0"
-mypy = "^1.4.1"
 pytest-asyncio = "^0.21.0"
 pytest = "^7.4.0"
+pytest-mock = "^3.11.1"
+
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
 
 [tool.black]
 line-length = 88

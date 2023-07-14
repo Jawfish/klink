@@ -1,15 +1,15 @@
-import logging
+from common.app.fastapi import FastAPIServer
 
-from service.app.server import run, setup
+from service.api.routes import router
 
 
 def main() -> None:
-    try:
-        app, host, port, log_config = setup()
-        run(app, host, port, log_config)
-    except Exception:
-        logging.exception("An error occurred while setting up and running the server.")
-        raise
+    server = FastAPIServer(
+        router=router,
+        host="127.0.0.1",
+        port="8000",
+    )
+    server.run()
 
 
 if __name__ == "__main__":

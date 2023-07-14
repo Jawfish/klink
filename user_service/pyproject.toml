@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "user-service"
+name = "user_service"
 version = "0.1.0"
 description = ""
 authors = ["James Fitzgerald <james@jawfish.dev>"]
@@ -12,18 +12,16 @@ httpx = "^0.24.1"
 uvicorn = "^0.22.0"
 argon2-cffi = "^21.3.0"
 sqlalchemy = "^2.0.18"
-jwt = "^1.3.1"
 python-dotenv = "^1.0.0"
-common = { path = "../common" }
 psycopg2 = "^2.9.6"
 passlib = { extras = ["argon2"], version = "^1.7.4" }
+common = {path = "../common"}
 
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
 ruff = "^0.0.277"
 black = "^23.3.0"
-mypy = "^1.4.1"
 pytest-mock = "^3.11.1"
 pytest-asyncio = "^0.21.0"
 pytest-watch = "^4.2.0"
@@ -111,13 +109,13 @@ ignore = [
   "ANN101", # don't require type annotations for self
   "ANN102", # don't require type annotations for cls
   "B008",   # let FastAPI use functions as default arguments
-  "S101",   # allow use of assert (for pytest)
-  # code should be self-documenting, so they should not be forced
+  # code should be self-documenting, so docstrings should not be forced
   "D100", # don't require module-level docstrings
   "D101", # don't require class-level docstrings
   "D102", # don't require method-level docstrings
   "D103", # don't require function-level docstrings
   "D107", # don't require docstrings for __init__ methods
+  "S101", # allow use of assert (for pytest)
 ]
 unfixable = [
   "ERA", # don't auto-remove commented-out code

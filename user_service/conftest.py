@@ -5,12 +5,13 @@ import pytest
 from common.api.exceptions.exception_handlers import handle_managed_exception
 from common.api.exceptions.managed_exception import ManagedException
 from common.api.schemas.user_schema import UserAuthData
+from common.app.fastapi import FastAPIServer
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from service.app.app_factory import create_app
+from service.api.routes import router
 from service.database.session import Base
 from service.database.user_handler import UserHandler, get_user_handler
 
@@ -25,7 +26,12 @@ def valid_user_in() -> UserAuthData:
 
 @pytest.fixture
 def app(db: Session) -> FastAPI:
-    app = create_app()
+    server = FastAPIServer(
+        router=router,
+        host="127.0.0.1",
+        port=8000,
+    )
+    app = server.app
     app.add_exception_handler(ManagedException, handle_managed_exception)
     app.dependency_overrides[get_user_handler] = lambda: UserHandler(db)
     return app
