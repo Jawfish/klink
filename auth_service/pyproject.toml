@@ -1,0 +1,110 @@
+[tool.poetry]
+name = "auth_service"
+version = "0.1.0"
+description = ""
+authors = ["James Fitzgerald <kaphix@gmail.com>"]
+packages = [{ include = "service" }]
+
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.100.0"
+argon2-cffi = "^21.3.0"
+pyjwt = "^2.7.0"
+python-dotenv = "^1.0.0"
+httpx = "^0.24.1"
+common = {path = "../common"}
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+ruff = "^0.0.278"
+black = "^23.7.0"
+pytest-watch = "^4.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry.scripts]
+service = "service.main:main"
+
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+target-version = ['py311']
+fast = true
+exclude = '''
+(
+  /(                        # exclude a few common directories in the
+    \.git                   # root of the project
+    | \.pytest_cache
+    | python-venv
+    | \.venv
+    | build
+    | dist
+    | \.tox
+  ))
+'''
+
+[tool.ruff]
+line-length = 88
+# https://beta.ruff.rs/docs/rules/
+select = [
+    "A",   # builtins
+    "ANN", # annotations
+    "ARG", # unused arguments
+    "B",   # bugbear
+    "BLE", # blind-except
+    "C4",  # comprehensions
+    "C90", # mccabe
+    "COM", # commas
+    "D",   # pydocstyle
+    "DTZ", # datetimez
+    "E",   # pycodestyle errors
+    "EM",  # errmsg
+    "F",   # pyflakes
+    "FBT", # boolean traps
+    "G",   # logging: https://google.github.io/styleguide/pyguide.html#3101-logging
+    "I",   # isort
+    "ICN", # import conventions
+    "INP", # no namespace packages
+    "ISC", # string concatenation
+    "N",   # naming
+    "PGH", # pygrep
+    "PIE", # misc errors
+    "PL",  # pylint
+    "PYI", # pyi
+    "RET", # return
+    "RET", # return
+    "RSE", # raise
+    "RUF", # ruff
+    "S",   # bandit
+    "SIM", # simplify
+    "T20", # print (prefer logging)
+    "TID", # tidy imports
+    "TCH", # type-checking
+    "TRY", # tryceratops
+    "UP",  # pyupgrade
+    "W",   # pycodestyle warnings
+]
+ignore = [
+    "ANN101", # don't require type annotations for self
+    "ANN102", # don't require type annotations for cls
+    "B008",   # let FastAPI use functions as default arguments
+    # code should be self-documenting, so docstrings should not be forced
+    "D100", # don't require module-level docstrings
+    "D101", # don't require class-level docstrings
+    "D102", # don't require method-level docstrings
+    "D103", # don't require function-level docstrings
+    "D107", # don't require docstrings for __init__ methods
+    "S101", # allow use of assert (for pytest)
+]
+unfixable = [
+    "ERA", # don't auto-remove commented-out code
+]
+
+
+[tool.ruff.pydocstyle]
+convention = "google"

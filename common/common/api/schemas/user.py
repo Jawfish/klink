@@ -89,4 +89,4 @@ class UserTokenResponse(BaseModel):
     Auth Service > Gateway > Frontend
     """
 
-    token: str
+    access_token: str

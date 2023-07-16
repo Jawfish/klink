@@ -13,7 +13,7 @@ uvicorn = "^0.22.0"
 sqlalchemy = "^2.0.18"
 python-dotenv = "^1.0.0"
 psycopg2 = "^2.9.6"
-common = {path = "../common"}
+common = { path = "../common" }
 
 
 [tool.poetry.group.dev.dependencies]
@@ -50,17 +50,6 @@ exclude = '''
   ))
 '''
 
-[tool.mypy]
-plugins = ["pydantic.mypy"]
-disallow_untyped_defs = "True"
-disallow_any_unimported = "True"
-no_implicit_optional = "True"
-check_untyped_defs = "True"
-warn_return_any = "True"
-warn_unused_ignores = "True"
-show_error_codes = "True"
-exclude = ['.venv']
-ignore_missing_imports = "True"
 
 [tool.ruff]
 line-length = 88
