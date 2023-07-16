@@ -14,6 +14,8 @@ pyjwt = "^2.7.0"
 python-dotenv = "^1.0.0"
 httpx = "^0.24.1"
 common = {path = "../common"}
+requests = "^2.31.0"
+responses = "^0.23.1"
 
 
 [tool.poetry.group.dev.dependencies]
