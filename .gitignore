@@ -159,12 +159,6 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-# logs
-logs
-log_config.json
-logging.json
-
-
 ### Go ###
 # If you prefer the allow list template instead of the deny list, see community template:
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
@@ -189,3 +183,9 @@ logging.json
 go.work
 
 # End of https://www.toptal.com/developers/gitignore/api/go
+
+# Project-specific
+logs
+log_config.json
+logging.json
+pn

@@ -1,104 +1,75 @@
 import pytest
-from argon2 import PasswordHasher
-from common.api.exceptions.user_exceptions import (
-    AuthenticationError,
+from common.api.exceptions.user import (
     UserAlreadyExistsError,
-    UserDoesNotExistError,
 )
-from common.api.schemas.user_schema import UserAuthData
+from common.api.schemas.user import CreateUserRequest
 from sqlalchemy.orm import Session
 
-from service.database.models import User
 from service.database.user_handler import UserHandler
-
-ph = PasswordHasher()
-
-
-def test_verification_succeeds_with_valid_user_data(
-    db: Session,
-    valid_user_in: UserAuthData,
-) -> None:
-    user_handler = UserHandler(db)
-    expected_user = User(
-        username=valid_user_in.username,
-        hashed_password=ph.hash(valid_user_in.unhashed_password),
-    )
-    db.add(expected_user)
-    db.commit()
-
-    user = user_handler.get_if_password_matches(valid_user_in)
-
-    assert user.username == expected_user.username
-    assert ph.verify(user.hashed_password, valid_user_in.unhashed_password)
-
-
-def test_verification_fails_for_non_existent_user(
-    db: Session,
-    valid_user_in: UserAuthData,
-) -> None:
-    user_handler = UserHandler(db)
-
-    with pytest.raises(UserDoesNotExistError):
-        user_handler.get_if_password_matches(valid_user_in)
-
-
-def test_mismatched_password_raises_exception(
-    db: Session,
-    valid_user_in: UserAuthData,
-) -> None:
-    user_handler = UserHandler(db)
-    existing_user = User(
-        username=valid_user_in.username,
-        hashed_password=ph.hash("wrong_password"),
-    )
-    db.add(existing_user)
-    db.commit()
-
-    with pytest.raises(AuthenticationError):
-        user_handler.get_if_password_matches(valid_user_in)
 
 
 def test_user_creation_succeeds_with_valid_data(
     db: Session,
-    valid_user_in: UserAuthData,
+    create_user_payload: CreateUserRequest,
 ) -> None:
     user_handler = UserHandler(db)
 
-    user = user_handler.create_user(valid_user_in)
+    user = user_handler.create_user(create_user_payload)
 
     assert user is not None
-    assert user.username == valid_user_in.username
-    assert ph.verify(user.hashed_password, valid_user_in.unhashed_password)
+    assert user.username == create_user_payload.username
+    assert user.hashed_password == create_user_payload.hashed_password
 
 
 def test_existing_user_prevents_new_user_creation(
     db: Session,
-    valid_user_in: UserAuthData,
+    create_user_payload: CreateUserRequest,
 ) -> None:
     user_handler = UserHandler(db)
 
-    user = user_handler.create_user(valid_user_in)
+    user = user_handler.create_user(create_user_payload)
     assert user is not None
-    assert user.username == valid_user_in.username
+    assert user.username == create_user_payload.username
 
     with pytest.raises(UserAlreadyExistsError):
-        user_handler.create_user(valid_user_in)
+        user_handler.create_user(create_user_payload)
 
 
-# def test_create_user(db, user_in):
-#     user_handler = UserHandler(db)
+def test_retrieval_of_user_by_username_succeeds(
+    db: Session,
+    create_user_payload: CreateUserRequest,
+) -> None:
+    user_handler = UserHandler(db)
 
-#     # User doesn't exist yet, should be created successfully
-#     user = user_handler.create_user(user_in)
-#     assert user is not None
-#     assert user.username == user_in.username
+    user = user_handler.create_user(create_user_payload)
+    assert user is not None
 
-#     # Trying to create the same user again should raise UserAlreadyExistsError
-#     with pytest.raises(UserAlreadyExistsError):
-#         user_handler.create_user(user_in)
+    retrieved_user = user_handler.get_by_username(create_user_payload.username)
+    assert retrieved_user is not None
+    assert retrieved_user.username == create_user_payload.username
 
-#     # Trying to create a user with invalid data should raise UserCreationError
-#     # Assuming that invalid data for the User model is handled in the model itself
-#     user_in.username = "invalid data"
-#     with pytest.raises(UserCreationError):
-#         user_handler.create_user(user_in)
+
+def test_retrieval_of_user_by_uuid_succeeds(
+    db: Session,
+    create_user_payload: CreateUserRequest,
+) -> None:
+    user_handler = UserHandler(db)
+
+    user = user_handler.create_user(create_user_payload)
+    assert user is not None
+
+    retrieved_user = user_handler.get_by_uuid(user.uuid)
+    assert retrieved_user is not None
+    assert retrieved_user.uuid == user.uuid
+
+
+def test_user_creation_fails_with_duplicate_username(
+    db: Session,
+    create_user_payload: CreateUserRequest,
+) -> None:
+    user_handler = UserHandler(db)
+
+    user_handler.create_user(create_user_payload)
+
+    with pytest.raises(UserAlreadyExistsError):
+        user_handler.create_user(create_user_payload)

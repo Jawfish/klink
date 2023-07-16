@@ -1,17 +1,11 @@
 import uuid
 
-from argon2 import PasswordHasher, exceptions
-from common.api.exceptions.user_exceptions import PasswordNotHashedError
-from common.api.schemas.user_schema import UserContext
-from sqlalchemy import UUID, Column, String, event
-from sqlalchemy.orm import Mapper
-from sqlalchemy.orm.session import Connection
+from common.api.schemas.user import InternalUserIdentity, UserAuthDataResponse
+from sqlalchemy import UUID, Column, String
 from sqlalchemy.sql import func
 from sqlalchemy.sql.sqltypes import DateTime
 
 from service.database.session import Base
-
-ph = PasswordHasher()
 
 
 class User(Base):
@@ -35,20 +29,11 @@ class User(Base):
         onupdate=func.now(),
     )
 
-    def to_user_out(self) -> UserContext:
-        return UserContext(username=self.username, uuid=str(self.uuid))
+    def to_identity(self) -> InternalUserIdentity:
+        return InternalUserIdentity(uuid=str(self.uuid))
 
-
-def ensure_password_is_hashed(
-    _: Mapper,
-    __: Connection,
-    target: User,
-) -> None:
-    try:
-        ph.check_needs_rehash(target.hashed_password)
-    except exceptions.InvalidHash:
-        raise PasswordNotHashedError from None
-
-
-event.listen(User, "before_insert", ensure_password_is_hashed)
-event.listen(User, "before_update", ensure_password_is_hashed)
+    def to_auth_data(self) -> UserAuthDataResponse:
+        return UserAuthDataResponse(
+            uuid=self.uuid,
+            hashed_password=self.hashed_password,
+        )

@@ -4,6 +4,3 @@ ENV PYTHONUNBUFFERED 1
 
 # Install PostgreSQL for pytest-postgresql
 RUN apt-get update && apt-get install -y postgresql postgresql-contrib
-
-
-

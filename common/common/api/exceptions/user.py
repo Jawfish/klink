@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 
-from common.api.exceptions.managed_exception import ManagedException
+from common.api.exceptions.managed import ManagedException
 
 
 class UserAlreadyExistsError(ManagedException):
@@ -17,6 +17,7 @@ class AuthenticationError(ManagedException):
 
     status_code = HTTPStatus.UNAUTHORIZED
     detail = "User could not be authenticated"
+
 
 class UserDoesNotExistError(ManagedException):
     """Raised when the user does not exist in the database"""

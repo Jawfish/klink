@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 
-from common.api.exceptions.managed_exception import ManagedException
+from common.api.exceptions.managed import ManagedException
 
 
 class InternalError(ManagedException):
@@ -10,6 +10,7 @@ class InternalError(ManagedException):
 
     status_code = HTTPStatus.INTERNAL_SERVER_ERROR
     detail = "Internal error"
+
 
 class EmptyFieldError(ManagedException):
     """Raised when a required field is empty"""

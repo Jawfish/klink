@@ -2,7 +2,7 @@ import logging
 import os
 from collections.abc import Generator
 
-from common.api.exceptions.general_exceptions import InternalError
+from common.api.exceptions.general import InternalError
 from psycopg2 import OperationalError
 from sqlalchemy import create_engine, engine
 from sqlalchemy.exc import SQLAlchemyError
@@ -23,18 +23,16 @@ class SQLAlchemyConnector:
         )
 
     def create_session(self) -> Generator[Session, None, None]:
-        db_session: Session = self.session_factory()
         try:
+            db_session: Session = self.session_factory()
             yield db_session
             db_session.commit()
         except OperationalError:
             logging.exception("Error establishing a database connection")
             raise
         except SQLAlchemyError:
-            msg = "Error committing database session"
-            logging.exception(msg)
             db_session.rollback()
-            raise InternalError(msg) from None
+            raise InternalError from None
         finally:
             db_session.close()
 

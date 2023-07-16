@@ -1,32 +1,32 @@
-import pytest
-from common.api.exceptions.user_exceptions import PasswordNotHashedError
-from common.api.schemas.user_schema import UserAuthData
+from common.api.schemas.user import (
+    CreateUserRequest,
+    InternalUserIdentity,
+    UserAuthDataResponse,
+)
 from sqlalchemy.orm import Session
 
-from service.database.models import User, ph
+from service.database.user_handler import UserHandler
 
 
-def test_saving_unhashed_password_raises_exception(
-    valid_user_in: UserAuthData,
+def test_user_identity_can_be_retrieved_from_user_model(
     db: Session,
+    create_user_payload: CreateUserRequest,
 ) -> None:
-    user = User(
-        username=valid_user_in.username,
-        hashed_password=valid_user_in.unhashed_password,
-    )
-    with pytest.raises(PasswordNotHashedError):
-        db.add(user)
-        db.commit()
+    user_handler = UserHandler(db)
+    user = user_handler.create_user(create_user_payload)
+
+    user_identity = user.to_identity()
+    assert isinstance(user_identity, InternalUserIdentity)
 
 
-def test_hashed_password_saves_successfully_in_database(
-    valid_user_in: UserAuthData,
+def test_auth_data_can_be_retrieved_from_user_model(
     db: Session,
+    create_user_payload: CreateUserRequest,
 ) -> None:
-    hashed_password = ph.hash(valid_user_in.unhashed_password)
-    user = User(username=valid_user_in.username, hashed_password=hashed_password)
-    db.add(user)
-    db.commit()
-    user_from_db = db.query(User).filter_by(username="TestUser").first()
-    assert user_from_db is not None
-    assert ph.check_needs_rehash(user_from_db.hashed_password) is False
+    user_handler = UserHandler(db)
+    user = user_handler.create_user(create_user_payload)
+
+    user_auth_data = user.to_auth_data()
+    assert isinstance(user_auth_data, UserAuthDataResponse)
+    assert user_auth_data.uuid == user.uuid
+    assert user_auth_data.hashed_password == user.hashed_password

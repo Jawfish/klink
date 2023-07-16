@@ -2,9 +2,9 @@ from collections.abc import Generator
 from typing import Any
 
 import pytest
-from common.api.exceptions.exception_handlers import handle_managed_exception
-from common.api.exceptions.managed_exception import ManagedException
-from common.api.schemas.user_schema import UserAuthData
+from common.api.exceptions.handlers import handle_managed_exception
+from common.api.exceptions.managed import ManagedException
+from common.api.schemas.user import CreateUserRequest
 from common.app.fastapi import FastAPIServer
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -17,10 +17,10 @@ from service.database.user_handler import UserHandler, get_user_handler
 
 
 @pytest.fixture
-def valid_user_in() -> UserAuthData:
-    return UserAuthData(
+def create_user_payload() -> CreateUserRequest:
+    return CreateUserRequest(
         username="TestUser",
-        unhashed_password="password123",  # noqa: S106
+        hashed_password="password123",  # noqa: S106
     )
 
 

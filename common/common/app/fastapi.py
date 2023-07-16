@@ -5,8 +5,8 @@ from importlib.resources import path
 from fastapi import APIRouter, FastAPI
 from uvicorn import Config, Server
 
-from common.api.exceptions.exception_handlers import handle_managed_exception
-from common.api.exceptions.managed_exception import ManagedException
+from common.api.exceptions.handlers import handle_managed_exception
+from common.api.exceptions.managed import ManagedException
 from common.service_logging import configure_logging, load_config_file
 
 

@@ -10,11 +10,9 @@ python = "^3.10"
 fastapi = "^0.100.0"
 httpx = "^0.24.1"
 uvicorn = "^0.22.0"
-argon2-cffi = "^21.3.0"
 sqlalchemy = "^2.0.18"
 python-dotenv = "^1.0.0"
 psycopg2 = "^2.9.6"
-passlib = { extras = ["argon2"], version = "^1.7.4" }
 common = {path = "../common"}
 
 
