@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from common.api.exceptions.handlers import handle_managed_exception
 from common.api.exceptions.managed import ManagedException
@@ -6,11 +8,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from service.api.router import router
-from service.config import Config, get_config
-
-
-def get_test_config() -> Config:
-    return Config("test_secret", "HS256")
+from service.handlers.credentials import ph
 
 
 @pytest.fixture
@@ -22,7 +20,6 @@ def app() -> FastAPI:
     )
     app = server.app
     app.add_exception_handler(ManagedException, handle_managed_exception)
-    app.dependency_overrides[get_config] = get_test_config
     return app
 
 
@@ -31,3 +28,20 @@ def client(
     app: FastAPI,
 ) -> TestClient:
     return TestClient(app)
+
+
+@pytest.fixture
+def valid_uuid() -> str:
+    return str(uuid.uuid4())
+
+
+@pytest.fixture
+def valid_hashed_password() -> str:
+    return ph.hash("valid_password")
+
+
+@pytest.fixture(autouse=True)
+def mock_env_vars(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("JWT_SECRET", "test_secret")
+    monkeypatch.setenv("JWT_ALGORITHM", "HS256")
+    monkeypatch.setenv("USER_SERVICE_URL", "http://localhost:8001")

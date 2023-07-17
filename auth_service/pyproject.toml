@@ -13,9 +13,11 @@ argon2-cffi = "^21.3.0"
 pyjwt = "^2.7.0"
 python-dotenv = "^1.0.0"
 httpx = "^0.24.1"
-common = {path = "../common"}
 requests = "^2.31.0"
 responses = "^0.23.1"
+python-multipart = "^0.0.6"
+common = {path = "../common"}
+pydantic-settings = "^2.0.2"
 
 
 [tool.poetry.group.dev.dependencies]

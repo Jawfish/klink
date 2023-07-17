@@ -1,26 +1,37 @@
-import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 import jwt
+from common.api.schemas.user import AuthToken, InternalUserIdentity
 from fastapi import HTTPException, status
+
+from service.config import JWTConfig
 
 
 def create_token(
     data: dict,
-    secret: str,
-    algorithm: str,
+    config: JWTConfig,
     expires_delta: timedelta = timedelta(minutes=30),
-) -> str:
+) -> AuthToken:
     to_encode = data.copy()
-    to_encode.update({"exp": datetime.utcnow() + expires_delta})
-    return jwt.encode(to_encode, secret, algorithm=algorithm)
+    to_encode.update({"exp": datetime.now(tz=timezone.utc) + expires_delta})
+    token = jwt.encode(to_encode, config.jwt_secret, algorithm=config.jwt_algorithm)
+    return AuthToken(token=token)
 
 
-def verify_token(token: str, secret: str, algorithm: str) -> str:
-    """Verifies an access token and returns the user's UUID if it's valid."""
+def get_identity(
+    token: str,
+    secret: str,
+    algorithm: str = "HS256",
+) -> InternalUserIdentity:
     try:
         payload = jwt.decode(token, secret, algorithms=[algorithm])
-        return payload.get("sub")
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid token: 'sub' claim missing",
+            )
+        return InternalUserIdentity(uuid=user_id)
     except jwt.PyJWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
