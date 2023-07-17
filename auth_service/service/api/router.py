@@ -1,12 +1,14 @@
 from datetime import timedelta
 from http import HTTPStatus
 
-from common.api.schemas.user import AuthToken, InternalUserIdentity
+from common.api.schemas.user import AuthToken, InternalUserIdentity, UserCredentials
 from fastapi import APIRouter, Depends
+from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from requests.exceptions import HTTPError
 
 from service.config import JWTConfig, ServiceConfig, get_jwt_config, get_service_config
-from service.handlers.credentials import get_authenticated_uuid
+from service.handlers.credentials import create_user, get_authenticated_uuid
 from service.handlers.tokens import create_token, get_identity
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -22,28 +24,46 @@ def get_user_identity(
     return get_identity(token, jwt_config.jwt_secret, jwt_config.jwt_algorithm)
 
 
-@router.post("/login", response_model=AuthToken)
+@router.post("/token", response_model=AuthToken)
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     jwt_config: JWTConfig = Depends(get_jwt_config),
     service_config: ServiceConfig = Depends(get_service_config),
 ) -> AuthToken:
     """Expects a username and password responds with a JWT if they're valid."""
-    uuid = get_authenticated_uuid(
-        username=form_data.username,
-        unhashed_password=form_data.password,
-        service_url=service_config.user_service_url,
-    )
-    return create_token(data={"sub": uuid}, config=jwt_config)
+    try:
+        uuid = get_authenticated_uuid(
+            username=form_data.username,
+            unhashed_password=form_data.password,
+            service_url=service_config.user_service_url,
+        )
+    except HTTPError as exc:
+        if exc.response.status_code == HTTPStatus.NOT_FOUND:
+            raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED) from None
+        raise
+    else:
+        return create_token(data={"sub": uuid}, config=jwt_config)
 
 
-def logout() -> None:
-    """Invalidates the user's JWT."""
+@router.post("/register", status_code=HTTPStatus.CREATED)
+def register(
+    user_in: UserCredentials,
+    service_config: ServiceConfig = Depends(get_service_config),
+) -> None:
+    """Expects a username and password, then creates a user."""
+    try:
+        create_user(
+            username=user_in.username,
+            unhashed_password=user_in.unhashed_password,
+            service_url=service_config.user_service_url,
+        )
+    except HTTPError as exc:
+        if exc.response.status_code == HTTPStatus.CONFLICT:
+            raise HTTPException(status_code=HTTPStatus.CONFLICT) from None
 
 
-@router.post("register", status_code=HTTPStatus.CREATED)
-def register() -> None:
-    """Expects a username and password, then creates a user, responding with a JWT."""
+# def logout() -> None:
+#     """Invalidates the user's JWT."""
 
 
 # This is not yet implemented in the serivce, so there's no route for it.

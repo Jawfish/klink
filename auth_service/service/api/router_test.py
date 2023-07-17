@@ -3,8 +3,9 @@ import uuid
 from http import HTTPStatus
 
 import jwt
+import pytest
 import responses
-from common.api.schemas.user import InternalUserIdentity
+from common.api.schemas.user import InternalUserIdentity, UserCredentials
 from fastapi.testclient import TestClient
 
 
@@ -55,7 +56,7 @@ def test_successful_login_with_correct_credentials(
     )
 
     response = client.post(
-        "/login",
+        "/token",
         data={"username": "valid_username", "password": "valid_password"},
     )
 
@@ -81,7 +82,7 @@ def test_invalid_credentials_result_in_unauthorized_status(
     )
 
     response = client.post(
-        "/login",
+        "/token",
         data={"username": "invalid_username", "password": "invalid_password"},
     )
 
@@ -107,8 +108,86 @@ def test_missing_credentials_result_in_unprocessable_status(
     )
 
     response = client.post(
-        "/login",
+        "/token",
         data={"username": "username_without_password"},
     )
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+@responses.activate
+def test_successful_registration_with_valid_credentials(
+    client: TestClient,
+) -> None:
+    user = UserCredentials(
+        username="valid_username",
+        unhashed_password="valid_password",  # noqa: S106
+    )
+
+    responses.add(
+        responses.POST,
+        "http://localhost:8001/users",
+        status=HTTPStatus.CREATED,
+        content_type="application/json",
+    )
+
+    response = client.post(
+        "/register",
+        content=user.model_dump_json(),
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+
+
+@responses.activate
+def test_registration_fails_when_user_already_exists(
+    client: TestClient,
+) -> None:
+    user = UserCredentials(
+        username="existing_username",
+        unhashed_password="valid_password",  # noqa: S106
+    )
+
+    responses.add(
+        responses.POST,
+        "http://localhost:8001/users",
+        status=HTTPStatus.CONFLICT,
+        content_type="application/json",
+    )
+
+    response = client.post(
+        "/register",
+        content=user.model_dump_json(),
+    )
+
+    assert response.status_code == HTTPStatus.CONFLICT
+
+
+@pytest.mark.parametrize(
+    "username,password,expected_status",
+    [
+        ("valid_username", "", HTTPStatus.UNPROCESSABLE_ENTITY),
+        ("", "valid_password", HTTPStatus.UNPROCESSABLE_ENTITY),
+        ("", "", HTTPStatus.UNPROCESSABLE_ENTITY),
+    ],
+)
+@responses.activate
+def test_registration_fails_for_invalid_inputs(
+    client: TestClient,
+    username: str,
+    password: str,
+    expected_status: HTTPStatus,
+) -> None:
+    responses.add(
+        responses.POST,
+        "http://localhost:8001/users",
+        status=expected_status,
+        content_type="application/json",
+    )
+
+    response = client.post(
+        "/register",
+        data={"username": username, "password": password},
+    )
+
+    assert response.status_code == expected_status
