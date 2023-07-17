@@ -3,7 +3,20 @@ import uuid
 from pydantic import BaseModel, Field, field_validator
 
 
-class UserAuthDataResponse(BaseModel):
+def uuid_validator(value: str) -> str:
+    """Ensure that the UUID is a valid UUID."""
+
+    if isinstance(value, uuid.UUID):
+        return str(value)
+    try:
+        uuid.UUID(value)
+    except ValueError as e:
+        msg = "Invalid UUID: %s" % value
+        raise ValueError(msg) from e
+    return value
+
+
+class UserAuthData(BaseModel):
     """
     Represents the data returned by the user service containing the information
     required for authentication purposes, such as when a user is logging in. The
@@ -13,8 +26,12 @@ class UserAuthDataResponse(BaseModel):
     User Service > Auth Service
     """
 
-    uuid: uuid.UUID
+    uuid: str
     hashed_password: str = Field(..., min_length=1)
+
+    @field_validator("uuid")
+    def validate_uuid(cls, value: str) -> str:  # noqa: N805
+        return uuid_validator(value)
 
 
 class UserCredentials(BaseModel):
@@ -29,8 +46,8 @@ class UserCredentials(BaseModel):
     Frontend > Gateway > Auth Service
     """
 
-    username: str
-    unhashed_password: str
+    username: str = Field(..., min_length=2)
+    unhashed_password: str = Field(..., min_length=12)
 
 
 class CreateUserRequest(BaseModel):
@@ -69,24 +86,19 @@ class InternalUserIdentity(BaseModel):
 
     @field_validator("uuid")
     def validate_uuid(cls, value: str) -> str:  # noqa: N805
-        """Ensure that the UUID is a valid UUID."""
-
-        if isinstance(value, uuid.UUID):
-            return str(value)
-        try:
-            uuid.UUID(value)
-        except ValueError as e:
-            msg = "Invalid UUID: %s" % value
-            raise ValueError(msg) from e
-        return value
+        return uuid_validator(value)
 
 
-class UserTokenResponse(BaseModel):
+class AuthToken(BaseModel):
     """
-    Represents the response the client receives after the user has been authenticated.
+    Represents the client's JWT so it can be used to authenticate the client.
 
-    Example flow:
-    Auth Service > Gateway > Frontend
+    Example flows:
+    Frontend > Gateway > Auth Service (to authenticate)
+    Auth Service > Gateway > Frontend (to provide access token)
     """
 
-    access_token: str
+    token: str
+    token_type: str = "bearer"
+    refresh_token: str | None = None
+    expires_in: str | None = None
