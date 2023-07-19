@@ -1,7 +1,7 @@
 from common.api.schemas.user import (
     CreateUserRequest,
     InternalUserIdentity,
-    UserAuthDataResponse,
+    UserAuthData,
 )
 from sqlalchemy.orm import Session
 
@@ -27,6 +27,6 @@ def test_auth_data_can_be_retrieved_from_user_model(
     user = user_handler.create_user(create_user_payload)
 
     user_auth_data = user.to_auth_data()
-    assert isinstance(user_auth_data, UserAuthDataResponse)
+    assert isinstance(user_auth_data, UserAuthData)
     assert user_auth_data.uuid == user.uuid
     assert user_auth_data.hashed_password == user.hashed_password

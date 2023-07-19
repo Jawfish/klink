@@ -6,7 +6,7 @@ from common.api.exceptions.user import (
 from common.api.schemas.user import (
     CreateUserRequest,
     InternalUserIdentity,
-    UserAuthDataResponse,
+    UserAuthData,
 )
 from fastapi import APIRouter, Depends
 
@@ -30,7 +30,7 @@ def create_user(
 def get_user_auth_data(
     username: str,
     user_handler: UserHandler = Depends(get_user_handler),
-) -> UserAuthDataResponse:
+) -> UserAuthData:
     """Retrieve the data required to authenticate a user."""
     user = user_handler.get_by_username(username)
 

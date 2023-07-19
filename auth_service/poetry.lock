@@ -359,6 +359,7 @@ develop = false
 colorlog = "^6.7.0"
 fastapi = "^0.100.0"
 fluent-logger = "^0.10.0"
+pytest-watch = "^4.2.0"
 python-dotenv = "^1.0.0"
 sqlalchemy = "^2.0.18"
 uvicorn = "^0.22.0"

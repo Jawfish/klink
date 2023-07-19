@@ -17,7 +17,7 @@ def reset_logging_after_test():
     reset_logging()
 
 
-def test_load_config_file(tmpdir):
+def test_valid_config_file_loads_correctly(tmpdir):
     config_path = tmpdir.join("logging_config.json")
     config = {
         "version": 1,
@@ -37,7 +37,7 @@ def test_load_config_file(tmpdir):
     assert loaded_config == config
 
 
-def test_load_config_file_raises_exceptions_for_invalid_files():
+def test_non_existent_or_non_json_config_file_raises_exception():
     with pytest.raises(FileNotFoundError):
         load_config_file("non_existent_file.json")
 
@@ -45,7 +45,7 @@ def test_load_config_file_raises_exceptions_for_invalid_files():
         load_config_file(__file__)  # Try to load a Python file as JSON
 
 
-def test_configure_logging(tmpdir):
+def test_logging_configures_with_valid_handlers(tmpdir):
     config = {
         "version": 1,
         "handlers": {
@@ -81,7 +81,7 @@ def test_configure_logging(tmpdir):
     assert os.path.exists(log_file_path)
 
 
-def test_configure_logging_raises_exception_for_invalid_config():
+def test_invalid_handler_class_in_config_raises_exception():
     invalid_config = {
         "version": 1,
         "handlers": {
@@ -98,21 +98,21 @@ def test_configure_logging_raises_exception_for_invalid_config():
         configure_logging(invalid_config)
 
 
-def test_load_config_file_with_empty_file(tmpdir):
+def test_empty_config_file_raises_json_decode_error(tmpdir):
     config_path = tmpdir.join("empty_config.json")
     config_path.write("")
     with pytest.raises(json.JSONDecodeError):
         load_config_file(str(config_path))
 
 
-def test_load_config_file_with_non_dict_json(tmpdir):
+def test_non_dict_json_config_file_loads_as_is(tmpdir):
     config_path = tmpdir.join("invalid_config.json")
     config_path.write('["this is a list, not a dict"]')
     config = load_config_file(str(config_path))
     assert config == ["this is a list, not a dict"]
 
 
-def test_configure_logging_with_no_handlers(caplog):
+def test_logging_without_handlers_does_not_log(caplog):
     config = {
         "version": 1,
         "root": {"level": "DEBUG", "handlers": []},
@@ -125,7 +125,7 @@ def test_configure_logging_with_no_handlers(caplog):
     assert test_message not in caplog.text
 
 
-def test_configure_logging_with_invalid_handler_class():
+def test_logging_with_invalid_handler_class_raises_exception():
     config = {
         "version": 1,
         "handlers": {

@@ -16,8 +16,8 @@ httpx = "^0.24.1"
 requests = "^2.31.0"
 responses = "^0.23.1"
 python-multipart = "^0.0.6"
-common = {path = "../common"}
 pydantic-settings = "^2.0.2"
+common = {path = "../common"}
 
 
 [tool.poetry.group.dev.dependencies]

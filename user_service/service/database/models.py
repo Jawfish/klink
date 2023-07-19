@@ -1,6 +1,6 @@
 import uuid
 
-from common.api.schemas.user import InternalUserIdentity, UserAuthDataResponse
+from common.api.schemas.user import InternalUserIdentity, UserAuthData
 from sqlalchemy import UUID, Column, String
 from sqlalchemy.sql import func
 from sqlalchemy.sql.sqltypes import DateTime
@@ -32,8 +32,8 @@ class User(Base):
     def to_identity(self) -> InternalUserIdentity:
         return InternalUserIdentity(uuid=str(self.uuid))
 
-    def to_auth_data(self) -> UserAuthDataResponse:
-        return UserAuthDataResponse(
+    def to_auth_data(self) -> UserAuthData:
+        return UserAuthData(
             uuid=self.uuid,
             hashed_password=self.hashed_password,
         )
