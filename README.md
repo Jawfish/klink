@@ -1,6 +1,6 @@
 # Klink
 
-Klink is a social bookmark-sharing and link aggregation platform where users can post, vote, and tag links, as well as sort and filter through these posts.
+Klink is a bookmark-sharing and link aggregation platform where users can post, vote, and tag links, as well as sort and filter through these posts.
 
 ## About    
 
@@ -13,17 +13,13 @@ The project exists as a monorepo for the sake of simplicity, but (per the micros
 
 Klink is designed with a microservice architecture in mind. The project is divided into separate services, each responsible for a specific functionality of the application. These services include:
 
-* **Frontend Service**: Serves the frontend of the application.
-* **User Service**: Handles user registration, authentication, and account management.
-* **Post Service**: Manages all operations related to posts such as voting on, creating, updating, and deleting posts.
-* **Tag Service**: Handles operations related to tags.
-* **Gateway Service**: Serves as the main entry point for the application. It is responsible for routing requests to the appropriate service.
-
-The following technologies were used to build the application:
-* **FastAPI**: Used to build backend microservices.
-* **Flask**: Used for building the frontend service, serving HTML templates and interacting with the FastAPI backend.
-* **SQLAlchemy**: Used as the ORM for handling database operations.
-* **PostgreSQL**: Used as the main relational database.
+* **Frontend (React/Next.js)**: Serves the frontend of the application.
+* **User Service (FastAPI and SQLAlchemy + PostgreSQL)**: Handles CRUD operations related to users.
+* **Auth Service (FastAPI)**: Handles user authentication, authorization, and identification via JWT issuance and validation.
+* **Post Service (Go + Pocketbase)**: Handles CRUD operations related to posts.
+* **Gateway Service (Go)**: Serves as the main entry point for the application. It is responsible for routing client requests to the appropriate service.
+* **Tests (Postman)**: A collection of Postman tests used for E2E and integration testing.
+* **Fluentd + Elasticsearch + Kibana**: Used for logging and monitoring.
 
 
 

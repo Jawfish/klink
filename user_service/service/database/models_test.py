@@ -28,5 +28,5 @@ def test_auth_data_can_be_retrieved_from_user_model(
 
     user_auth_data = user.to_auth_data()
     assert isinstance(user_auth_data, UserAuthData)
-    assert user_auth_data.uuid == user.uuid
+    assert user_auth_data.uuid == str(user.uuid)
     assert user_auth_data.hashed_password == user.hashed_password

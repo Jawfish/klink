@@ -34,6 +34,6 @@ class User(Base):
 
     def to_auth_data(self) -> UserAuthData:
         return UserAuthData(
-            uuid=self.uuid,
+            uuid=str(self.uuid),
             hashed_password=self.hashed_password,
         )

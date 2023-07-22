@@ -13,7 +13,7 @@ uvicorn = "^0.22.0"
 sqlalchemy = "^2.0.18"
 python-dotenv = "^1.0.0"
 psycopg2 = "^2.9.6"
-common = { path = "../common" }
+common = {path = "../common"}
 
 
 [tool.poetry.group.dev.dependencies]

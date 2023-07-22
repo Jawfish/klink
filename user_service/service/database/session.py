@@ -40,14 +40,10 @@ class SQLAlchemyConnector:
 def create_database_session() -> Generator[Session, None, None]:
     logging.debug("Creating database session")
     # TODO: fail fast if database is not available (don't use a default value)
-    try:
-        db_connection = SQLAlchemyConnector(
-            os.getenv(
-                "SQLALCHEMY_DATABASE_URL",
-                "postgresql+psycopg2://postgres:postgres@localhost:5432/postgres",
-            ),
-        )
-    except SQLAlchemyError:
-        logging.exception("Error creating database session")
-        raise
+    db_connection = SQLAlchemyConnector(
+        os.getenv(
+            "SQLALCHEMY_DATABASE_URL",
+            "postgresql+psycopg2://postgres:postgres@localhost:5432/postgres",
+        ),
+    )
     yield from db_connection.create_session()

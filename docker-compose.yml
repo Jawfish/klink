@@ -4,7 +4,6 @@ services:
   gateway:
     build:
       context: ./app/gateway
-      dockerfile: Dockerfile
     networks:
       - klink_net
     ports:
@@ -17,7 +16,6 @@ services:
   user:
     build:
       context: ./app/user
-      dockerfile: Dockerfile
     networks:
       - klink_net
     ports:
@@ -28,7 +26,6 @@ services:
   post:
     build:
       context: ./app/post
-      dockerfile: Dockerfile
     networks:
       - klink_net
     ports:
@@ -39,7 +36,6 @@ services:
   tag:
     build:
       context: ./app/tag
-      dockerfile: Dockerfile
     networks:
       - klink_net
     ports:
@@ -50,7 +46,6 @@ services:
   frontend:
     build:
       context: ./app/frontend
-      dockerfile: Dockerfile
     networks:
       - klink_net
     ports:
