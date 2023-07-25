@@ -7,8 +7,6 @@ services:
       context: ./auth_service
     networks:
       - klink_net
-    ports:
-      - 8000:8000
     environment:
       - HOST_IP=0.0.0.0
       - HOST_PORT=8000
@@ -20,8 +18,6 @@ services:
       context: ./user_service
     networks:
       - klink_net
-    ports:
-      - 8001:8001
     environment:
       - DATABASE_URL=postgres://test:test@user_db:5432/test
       - HOST_PORT=8001
@@ -37,9 +33,63 @@ services:
       POSTGRES_USER: test
       POSTGRES_PASSWORD: test
 
+  post:
+    build:
+      context: ./post_service
+    networks:
+      - klink_net
+    environment:
+      - HOST_IP=0.0.0.0
+      - HOST_PORT=8002
+      - DB_HOST=post_db
+      - DB_PORT=5432
+      - DB_USER=test
+      - DB_PASS=test
+      - DB_NAME=test
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=test
+      - RABBITMQ_PASS=test
+      - RABBITMQ_QUEUE=post
+      - FLUENTD_HOST=fluentd
+      - FLUENTD_PORT=24224
+      - FLUENTD_TAG=post
+
+  post_db:
+    image: postgres:latest
+    networks:
+      - klink_net
+    volumes:
+      - post_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+
+  fluentd:
+    image: fluent/fluentd:v1.16
+    volumes:
+      - $PWD/fluentd:/fluentd/etc
+    networks:
+      - klink_net
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+
+  rabbitmq:
+    image: rabbitmq:3.10-management
+    networks:
+      - klink_net
+    environment:
+      - RABBITMQ_DEFAULT_USER=test
+      - RABBITMQ_DEFAULT_PASS=test
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+
 networks:
   klink_net:
 
 
 volumes:
   user_data:
+  post_data:

@@ -14,13 +14,13 @@ The project exists as a monorepo for the sake of simplicity, but (per the micros
 Klink is designed with a microservice architecture in mind. The project is divided into separate services, each responsible for a specific functionality of the application. These services include:
 
 * **Frontend (React/Next.js)**: Serves the frontend of the application.
-* **User Service (FastAPI and SQLAlchemy + PostgreSQL)**: Handles CRUD operations related to users.
+* **User Service (FastAPI & SQLAlchemy + PostgreSQL)**: Handles CRUD operations related to users.
 * **Auth Service (FastAPI)**: Handles user authentication, authorization, and identification via JWT issuance and validation.
-* **Post Service (Go + Pocketbase)**: Handles CRUD operations related to posts.
+* **Post Service (Go + SQLite)**: Handles CRUD operations related to posts.
 * **Gateway Service (Go)**: Serves as the main entry point for the application. It is responsible for routing client requests to the appropriate service.
+* **Message Broker (RabbitMQ)**: Used for asynchronous communication between services.
 * **Tests (Postman)**: A collection of Postman tests used for E2E and integration testing.
 * **Fluentd + Elasticsearch + Kibana**: Used for logging and monitoring.
-
 
 
 ## Deployment
