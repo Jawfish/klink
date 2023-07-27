@@ -1,26 +1,41 @@
 {
     "info": {
-        "name": "Test Collection",
-        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+        "_postman_id": "333c8eb6-0495-43af-9d5b-b4783e6bddfe",
+        "name": "klink",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "28809938"
     },
     "item": [
         {
-            "name": "Register",
+            "name": "Users can register if the username doesn't already exist",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 201\", function () {\r",
+                            "    pm.response.to.have.status(201);\r",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
             "request": {
                 "method": "POST",
                 "header": [
                     {
                         "key": "Content-Type",
-                        "value": "application/json"
+                        "value": "application/json",
+                        "type": "text"
                     }
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\"username\": \"username\", \"unhashed_password\": \"unhashed_password\"}"
+                    "raw": "{\r\n    \"username\": \"username\",\r\n    \"unhashed_password\": \"unhashed_password\"\r\n}"
                 },
                 "url": {
                     "raw": "{{AUTH_SERVICE_URL}}/register",
-                    "protocol": "http",
                     "host": [
                         "{{AUTH_SERVICE_URL}}"
                     ],
@@ -29,47 +44,98 @@
                     ]
                 }
             },
-            "response": [],
+            "response": []
+        },
+        {
+            "name": "Users can't register an existing username",
             "event": [
                 {
                     "listen": "test",
                     "script": {
                         "exec": [
-                            "pm.test('Status code is 201', function () {",
-                            "    pm.response.to.have.status(201);",
+                            "pm.test(\"Status code is 409\", function () {\r",
+                            "    pm.response.to.have.status(409);\r",
                             "});"
                         ],
                         "type": "text/javascript"
                     }
                 }
-            ]
-        },
-        {
-            "name": "Login",
+            ],
             "request": {
                 "method": "POST",
                 "header": [
                     {
                         "key": "Content-Type",
-                        "value": "application/x-www-form-urlencoded"
+                        "value": "application/json",
+                        "type": "text"
                     }
                 ],
                 "body": {
-                    "mode": "urlencoded",
-                    "urlencoded": [
+                    "mode": "raw",
+                    "raw": "{\r\n    \"username\": \"username\",\r\n    \"unhashed_password\": \"unhashed_password\"\r\n}"
+                },
+                "url": {
+                    "raw": "{{AUTH_SERVICE_URL}}/register",
+                    "host": [
+                        "{{AUTH_SERVICE_URL}}"
+                    ],
+                    "path": [
+                        "register"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Token is received when logging in with valid credentials",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200\", function () {\r",
+                            "    pm.response.to.have.status(200);\r",
+                            "});\r",
+                            "\r",
+                            "pm.test(\"Body contains token\", function () {\r",
+                            "    pm.response.to.have.jsonBody(\"token\");\r",
+                            "});\r",
+                            "\r",
+                            "let jsonResponse = pm.response.json();\r",
+                            "\r",
+                            "pm.environment.set(\"jwt\", jsonResponse.token);\r",
+                            ""
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
                         {
                             "key": "username",
-                            "value": "username"
+                            "value": "username",
+                            "type": "text"
                         },
                         {
                             "key": "password",
-                            "value": "unhashed_password"
+                            "value": "unhashed_password",
+                            "type": "text"
                         }
                     ]
                 },
                 "url": {
                     "raw": "{{AUTH_SERVICE_URL}}/token",
-                    "protocol": "http",
                     "host": [
                         "{{AUTH_SERVICE_URL}}"
                     ],
@@ -78,23 +144,146 @@
                     ]
                 }
             },
-            "response": [],
+            "response": []
+        },
+        {
+            "name": "Logging in with invalid credentials result in unauthorized response",
             "event": [
                 {
                     "listen": "test",
                     "script": {
                         "exec": [
-                            "pm.test('Status code is 200', function () {",
-                            "    pm.response.to.have.status(200);",
-                            "});",
-                            "pm.test('Response has token', function () {",
-                            "    pm.response.to.have.jsonBody('token');",
-                            "});"
+                            "pm.test(\"Status code is 401\", function () {\r",
+                            "    pm.response.to.have.status(401);\r",
+                            "});\r",
+                            "\r",
+                            "pm.test(\"Body doesn't contain token\", function () {\r",
+                            "    pm.response.to.not.have.jsonBody(\"token\");\r",
+                            "});\r",
+                            "\r",
+                            ""
                         ],
                         "type": "text/javascript"
                     }
                 }
-            ]
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "username",
+                            "value": "invalid_username",
+                            "type": "text"
+                        },
+                        {
+                            "key": "password",
+                            "value": "unhashed_password",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{AUTH_SERVICE_URL}}/token",
+                    "host": [
+                        "{{AUTH_SERVICE_URL}}"
+                    ],
+                    "path": [
+                        "token"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "User's identity can be retrieved with valid JWT",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200\", function () {\r",
+                            "    pm.response.to.have.status(200);\r",
+                            "});\r",
+                            "\r",
+                            "pm.test(\"Body contains uuid\", function () {\r",
+                            "    pm.response.to.have.jsonBody(\"uuid\");\r",
+                            "});\r",
+                            ""
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{AUTH_SERVICE_URL}}/user-identity",
+                    "host": [
+                        "{{AUTH_SERVICE_URL}}"
+                    ],
+                    "path": [
+                        "user-identity"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "User's identity can't be retrieved with invalid JWT",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 401\", function () {\r",
+                            "    pm.response.to.have.status(401);\r",
+                            "});\r",
+                            "\r",
+                            "pm.test(\"Body contains uuid\", function () {\r",
+                            "    pm.response.to.not.have.jsonBody(\"uuid\");\r",
+                            "});\r",
+                            ""
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer invalid_jwt",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{AUTH_SERVICE_URL}}/user-identity",
+                    "host": [
+                        "{{AUTH_SERVICE_URL}}"
+                    ],
+                    "path": [
+                        "user-identity"
+                    ]
+                }
+            },
+            "response": []
         }
     ]
 }

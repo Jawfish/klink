@@ -24,7 +24,7 @@ class UserHandler:
         user = self.db.query(User).filter(User.username == username).first()
 
         if user is None:
-            logging.error("User %s does not exist", username)
+            logging.info("User %s does not exist", username)
         else:
             logging.info("Retrieved user %s", username)
 
@@ -36,7 +36,7 @@ class UserHandler:
         user = self.db.query(User).filter(User.uuid == uuid).first()
 
         if user is None:
-            logging.error("User with UUID %s does not exist", uuid)
+            logging.info("User with UUID %s does not exist", uuid)
         else:
             logging.info("Retrieved user with UUID %s", uuid)
 

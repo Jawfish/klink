@@ -11,7 +11,7 @@ The project exists as a monorepo for the sake of simplicity, but (per the micros
 
 ## Architecture
 
-Klink is designed with a microservice architecture in mind. The project is divided into separate services, each responsible for a specific functionality of the application. These services include:
+This project is designed using a microservice architecture, implementing both EDA and REST APIs for communication between services. The project is divided into separate services, each responsible for a specific functionality of the application. These services include:
 
 * **Frontend (React/Next.js)**: Serves the frontend of the application.
 * **User Service (FastAPI & SQLAlchemy + PostgreSQL)**: Handles CRUD operations related to users.

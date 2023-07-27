@@ -2,6 +2,7 @@ from datetime import timedelta
 from http import HTTPStatus
 
 from common.api.schemas.user import AuthToken, InternalUserIdentity, UserCredentials
+from common.api.exceptions.user import UserAlreadyExistsError
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm

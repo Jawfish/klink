@@ -1,18 +1,25 @@
 import logging
 import os
+from fastapi.responses import JSONResponse
 
 import uvicorn
 from common.service_logging import configure_logging, load_default_config_file
 from dotenv import load_dotenv
-from fastapi import FastAPI
-
+from fastapi import FastAPI, Request
 from service.api.router import router
+from common.api.exceptions.user import ManagedException
 
+async def handle_user_already_exists_error(_: Request, exc: ManagedException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+    )
 
 def main() -> None:
     load_dotenv()
     
     app = FastAPI()
+    app.add_exception_handler(ManagedException, handle_user_already_exists_error)
     host = os.getenv("HOST_IP")
     port = int(os.getenv("HOST_PORT"))
     log_file = load_default_config_file()
