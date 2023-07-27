@@ -25,12 +25,14 @@ class SQLAlchemyConnector:
     def create_session(self) -> Generator[Session, None, None]:
         try:
             db_session: Session = self.session_factory()
+            logging.info("Database connection established: %s", self.engine.url)
             yield db_session
             db_session.commit()
         except OperationalError:
             logging.exception("Error establishing a database connection")
             raise
         except SQLAlchemyError:
+            logging.exception("Error committing to the database")
             db_session.rollback()
             raise InternalError from None
         finally:
@@ -39,11 +41,11 @@ class SQLAlchemyConnector:
 
 def create_database_session() -> Generator[Session, None, None]:
     logging.debug("Creating database session")
-    # TODO: fail fast if database is not available (don't use a default value)
-    db_connection = SQLAlchemyConnector(
-        os.getenv(
-            "SQLALCHEMY_DATABASE_URL",
-            "postgresql+psycopg2://postgres:postgres@localhost:5432/postgres",
-        ),
-    )
+    user = os.getenv("DB_USER")
+    password = os.getenv("DB_PASS")
+    host = os.getenv("DB_HOST")
+    port = os.getenv("DB_PORT")
+    name = os.getenv("DB_NAME")
+    url = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{name}'
+    db_connection = SQLAlchemyConnector(url)
     yield from db_connection.create_session()

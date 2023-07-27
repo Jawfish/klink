@@ -16,9 +16,7 @@ wait_for_service() {
 
 wait_for_service ${AUTH_SERVICE_URL}
 wait_for_service ${USER_SERVICE_URL}
-wait_for_service ${POST_SERVICE_URL}
 
 newman run collection.json \
     --env-var "AUTH_SERVICE_URL=${AUTH_SERVICE_URL}" \
-    --env-var "USER_SERVICE_URL=${USER_SERVICE_URL}" \
-    --env-var "POST_SERVICE_URL=${POST_SERVICE_URL}"
+    --env-var "USER_SERVICE_URL=${USER_SERVICE_URL}"

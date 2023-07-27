@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+
+  postman:
+    build:
+      context: ./postman
+    environment:
+      - AUTH_SERVICE_URL=auth:8000
+      - USER_SERVICE_URL=user:8001
+
+networks:
+  klink_net:

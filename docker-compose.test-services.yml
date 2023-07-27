@@ -19,7 +19,11 @@ services:
     ports:
       - "8001:8001" # expose for access to /docs for help with testing
     environment:
-      - DATABASE_URL=postgres://test:test@user_db:5432/test
+      - DB_HOST=user_db
+      - DB_PORT=5432
+      - DB_USER=test
+      - DB_PASS=test
+      - DB_NAME=test
       - HOST_PORT=8001
       - HOST_IP=0.0.0.0
 
@@ -71,14 +75,6 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
-
-  postman:
-    build:
-      context: ./postman
-    environment:
-      - AUTH_SERVICE_URL=http://auth:8000
-      - USER_SERVICE_URL=http://user:8001
-      - POST_SERVICE_URL=http://post:8002
 
 networks:
   klink_net:

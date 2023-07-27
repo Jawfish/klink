@@ -1,3 +1,4 @@
+import logging
 from http import HTTPStatus
 
 from common.api.exceptions.user import (
@@ -21,6 +22,7 @@ def create_user(
     user_handler: UserHandler = Depends(get_user_handler),
 ) -> InternalUserIdentity:
     """Create a new user in the database and return the created user's identity."""
+    logging.info("Endpoint called: create_user for user %s", payload.username)
     user = user_handler.create_user(payload)
 
     return user.to_identity()
@@ -32,6 +34,7 @@ def get_user_auth_data(
     user_handler: UserHandler = Depends(get_user_handler),
 ) -> UserAuthData:
     """Retrieve the data required to authenticate a user."""
+    logging.info("Endpoint called: get_user_auth_data for user %s", username)
     user = user_handler.get_by_username(username)
 
     if user is None:
