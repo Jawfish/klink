@@ -10,12 +10,13 @@ from service.api.router import router
 
 
 def main() -> None:
+    load_dotenv()
+    
     app = FastAPI()
     host = os.getenv("HOST_IP")
     port = int(os.getenv("HOST_PORT"))
     log_file = load_default_config_file()
 
-    load_dotenv()
 
     configure_logging(log_file)
     app.include_router(router)
