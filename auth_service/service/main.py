@@ -2,7 +2,7 @@ import logging
 import os
 
 import uvicorn
-from common.service_logging import configure_logging, load_default_config_file
+from common.service_logging import configure_logging, LOGGING_CONFIG
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
@@ -10,13 +10,13 @@ from service.api.router import router
 
 
 def main() -> None:
+    load_dotenv()
+
     app = FastAPI()
     host = os.getenv("HOST_IP")
     port = int(os.getenv("HOST_PORT"))
-    log_file = load_default_config_file()
 
-    load_dotenv()
-    configure_logging(log_file)
+    configure_logging()
     app.include_router(router)
 
     logging.info("Starting service at http://%s:%s", host, port)
@@ -28,7 +28,7 @@ def main() -> None:
         app,
         host=host,
         port=port,
-        log_config=log_file,
+        log_config=LOGGING_CONFIG,
     )
 
 

@@ -6,12 +6,15 @@ services:
     build:
       context: ./auth_service
     ports:
-      - "8000:8000" # expose for access to /docs for help with testing
+      - "8000:8000" # ./tesexpose for access to /docs for help with testing
     environment:
       - HOST_IP=0.0.0.0
       - HOST_PORT=8000
       - JWT_SECRET=secret
       - USER_SERVICE_URL=http://user:8001
+      - FLUENTD_HOST=fluentd
+      - FLUENTD_PORT=24224
+      - LOG_TO_STDOUT=false
 
   user:
     build:
@@ -26,6 +29,9 @@ services:
       - DB_NAME=test
       - HOST_PORT=8001
       - HOST_IP=0.0.0.0
+      - FLUENTD_HOST=fluentd
+      - FLUENTD_PORT=24224
+      - LOG_TO_STDOUT=false
 
   user_db:
     image: postgres:latest

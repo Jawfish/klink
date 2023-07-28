@@ -347,28 +347,6 @@ colorama = {version = "*", markers = "sys_platform == \"win32\""}
 development = ["black", "flake8", "mypy", "pytest", "types-colorama"]
 
 [[package]]
-name = "common"
-version = "0.1.0"
-description = ""
-optional = false
-python-versions = "^3.10"
-files = []
-develop = false
-
-[package.dependencies]
-colorlog = "^6.7.0"
-fastapi = "^0.100.0"
-fluent-logger = "^0.10.0"
-pytest-watch = "^4.2.0"
-python-dotenv = "^1.0.0"
-sqlalchemy = "^2.0.18"
-uvicorn = "^0.22.0"
-
-[package.source]
-type = "directory"
-url = "../common"
-
-[[package]]
 name = "docopt"
 version = "0.6.2"
 description = "Pythonic argument parser, that will make you smile"
@@ -574,6 +552,28 @@ files = [
     {file = "iniconfig-2.0.0-py3-none-any.whl", hash = "sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374"},
     {file = "iniconfig-2.0.0.tar.gz", hash = "sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3"},
 ]
+
+[[package]]
+name = "klink-common"
+version = "0.1.0"
+description = ""
+optional = false
+python-versions = "^3.10"
+files = []
+develop = false
+
+[package.dependencies]
+colorlog = "^6.7.0"
+fastapi = "^0.100.0"
+fluent-logger = "^0.10.0"
+pytest-watch = "^4.2.0"
+python-dotenv = "^1.0.0"
+sqlalchemy = "^2.0.18"
+uvicorn = "^0.22.0"
+
+[package.source]
+type = "directory"
+url = "../common"
 
 [[package]]
 name = "msgpack"
@@ -1283,4 +1283,4 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "9a7651ffe862b447a19f0d1cf2352a43aedf9bcf3a945cc8f5a0d4ac0394533c"
+content-hash = "b47d3a0b6bc5de801c13ff0d364300a9b02a9a01abb2d7e5385cb7490cbb3a22"

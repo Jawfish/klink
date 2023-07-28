@@ -46,6 +46,6 @@ def create_database_session() -> Generator[Session, None, None]:
     host = os.getenv("DB_HOST")
     port = os.getenv("DB_PORT")
     name = os.getenv("DB_NAME")
-    url = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{name}'
+    url = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{name}"
     db_connection = SQLAlchemyConnector(url)
     yield from db_connection.create_session()
