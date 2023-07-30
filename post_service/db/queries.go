@@ -55,6 +55,27 @@ func GetPost(db *sql.DB, postUUID string) (*Post, error) {
 	return &post, nil
 }
 
+func GetPosts(db *sql.DB, offset int, limit int) ([]Post, error) {
+	query := "SELECT uuid, author, votecount, title, url, createdat FROM posts ORDER BY createdat DESC LIMIT ? OFFSET ?"
+	rows, err := db.Query(query, limit, offset)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []Post
+	for rows.Next() {
+		var post Post
+		if err := rows.Scan(&post.UUID, &post.Author, &post.VoteCount, &post.Title, &post.URL, &post.CreatedAt); err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+
+	return posts, nil
+}
+
 func UpdateVoteCount(db *sql.DB, postUUID string, increment int) error {
 	query := "UPDATE posts SET votecount = votecount + ? WHERE uuid = ?"
 	_, err := db.Exec(query, increment, postUUID)

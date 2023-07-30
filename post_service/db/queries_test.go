@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -130,6 +131,66 @@ func Test_retrieval_of_existing_post_succeeds(t *testing.T) {
 	require.NotNil(t, queriedPost)
 
 	assert.Equal(t, post, *queriedPost)
+}
+
+func Test_paginated_retrieval_of_posts_succeeds(t *testing.T) {
+	db := setupDatabase(t)
+
+	posts := []Post{
+		{
+			UUID:      "1",
+			VoteCount: 100,
+			Author:    "unknown",
+			Title:     "Test Post",
+			URL:       "https://test.com",
+			CreatedAt: time.Now().Format(time.RFC3339),
+		},
+		{
+			UUID:      "2",
+			VoteCount: 200,
+			Author:    "unknown",
+			Title:     "Test Post 2",
+			URL:       "https://test2.com",
+			CreatedAt: time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+		},
+		{
+			UUID:      "3",
+			VoteCount: 300,
+			Author:    "unknown",
+			Title:     "Test Post 3",
+			URL:       "https://test3.com",
+			CreatedAt: time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+		},
+		{
+			UUID:      "4",
+			VoteCount: 300,
+			Author:    "unknown",
+			Title:     "Test Post 4",
+			URL:       "https://test4.com",
+			CreatedAt: time.Now().Add(-3 * time.Hour).Format(time.RFC3339),
+		},
+	}
+
+	for _, post := range posts {
+		err := InsertPost(db, post)
+		require.Nil(t, err)
+	}
+
+	queriedPosts, err := GetPosts(db, 0, 2)
+	require.Nil(t, err)
+	require.NotNil(t, queriedPosts)
+
+	// Expect the newest posts to be returned first
+	assert.Equal(t, posts[0].UUID, queriedPosts[0].UUID)
+	assert.Equal(t, posts[1].UUID, queriedPosts[1].UUID)
+
+	queriedPosts, err = GetPosts(db, 2, 2)
+	require.Nil(t, err)
+	require.NotNil(t, queriedPosts)
+
+	// // The second page should start with the second oldest post
+	assert.Equal(t, posts[2].UUID, queriedPosts[0].UUID)
+	assert.Equal(t, posts[3].UUID, queriedPosts[1].UUID)
 }
 
 func Test_updating_vote_count_of_non_existent_post_returns_no_error(t *testing.T) {
