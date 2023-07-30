@@ -17,17 +17,13 @@ import (
 
 func Test_posts_can_be_retrieved_in_paginated_manner(t *testing.T) {
 	db := database.SetupTestDB(t)
+	numPosts := 25
 
 	// Insert dummy data
-	for i := 1; i <= 25; i++ {
-		post := database.Post{
-			UUID:      "test-post-" + strconv.Itoa(i),
-			Author:    "test-author",
-			VoteCount: i,
-			Title:     "test title " + strconv.Itoa(i),
-			URL:       "test-url-" + strconv.Itoa(i),
-			CreatedAt: time.Now().Add(-time.Duration(i) * time.Minute).Format(time.RFC3339),
-		}
+	for i := 1; i <= numPosts; i++ {
+		post := database.GenerateTestPost()
+		post.UUID = "test-post-" + strconv.Itoa(i)
+		post.CreatedAt = time.Now().Add(-time.Duration(i) * time.Minute).Format(time.RFC3339)
 		err := database.InsertPost(db, post)
 		require.NoError(t, err)
 	}
@@ -59,17 +55,8 @@ func Test_posts_can_be_retrieved_in_paginated_manner(t *testing.T) {
 func Test_response_conforms_to_expected_schema(t *testing.T) {
 	db := database.SetupTestDB(t)
 
-	now := time.Now().Format(time.RFC3339)
+	post := database.GenerateTestPost()
 
-	// Insert a dummy post
-	post := database.Post{
-		UUID:      "test-post",
-		Author:    "test-author",
-		VoteCount: 1,
-		Title:     "test title",
-		URL:       "test-url",
-		CreatedAt: now,
-	}
 	err := database.InsertPost(db, post)
 	require.NoError(t, err)
 
@@ -88,10 +75,10 @@ func Test_response_conforms_to_expected_schema(t *testing.T) {
 
 	// Check that the response conforms to the expected schema
 	require.Len(t, posts, 1)
-	assert.Equal(t, "test-post", posts[0].UUID)
-	assert.Equal(t, "test-author", posts[0].Author)
-	assert.Equal(t, 1, posts[0].VoteCount)
-	assert.Equal(t, "test title", posts[0].Title)
-	assert.Equal(t, "test-url", posts[0].URL)
-	assert.Equal(t, now, posts[0].CreatedAt)
+	assert.Equal(t, post.UUID, posts[0].UUID)
+	assert.Equal(t, post.Author, posts[0].Author)
+	assert.Equal(t, post.VoteCount, posts[0].VoteCount)
+	assert.Equal(t, post.Title, posts[0].Title)
+	assert.Equal(t, post.URL, posts[0].URL)
+	assert.Equal(t, post.CreatedAt, posts[0].CreatedAt)
 }

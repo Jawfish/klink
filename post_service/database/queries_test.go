@@ -11,12 +11,7 @@ import (
 func Test_valid_post_insertion_succeeds(t *testing.T) {
 	db := SetupTestDB(t)
 
-	post := Post{
-		UUID:      "1234",
-		VoteCount: 100,
-		Title:     "Test Post",
-		URL:       "https://test.com",
-	}
+	post := GenerateTestPost()
 
 	err := InsertPost(db, post)
 	require.Nil(t, err)
@@ -25,12 +20,7 @@ func Test_valid_post_insertion_succeeds(t *testing.T) {
 func Test_duplicate_post_insertion_fails(t *testing.T) {
 	db := SetupTestDB(t)
 
-	post := Post{
-		UUID:      "1234",
-		VoteCount: 100,
-		Title:     "Test Post",
-		URL:       "https://test.com",
-	}
+	post := GenerateTestPost()
 
 	err := InsertPost(db, post)
 	require.Nil(t, err)
@@ -40,12 +30,7 @@ func Test_duplicate_post_insertion_fails(t *testing.T) {
 }
 
 func Test_post_insertion_with_nil_database_returns_error(t *testing.T) {
-	post := Post{
-		UUID:      "1234",
-		VoteCount: 100,
-		Title:     "Test Post",
-		URL:       "https://test.com",
-	}
+	post := GenerateTestPost()
 
 	err := InsertPost(nil, post)
 	require.NotNil(t, err)
@@ -54,20 +39,15 @@ func Test_post_insertion_with_nil_database_returns_error(t *testing.T) {
 func Test_post_insertion_verifies_correctly(t *testing.T) {
 	db := SetupTestDB(t)
 
-	post := Post{
-		UUID:      "1234",
-		VoteCount: 100,
-		Title:     "Test Post",
-		URL:       "https://test.com",
-	}
+	post := GenerateTestPost()
 
 	err := InsertPost(db, post)
 	require.Nil(t, err)
 
-	row := db.QueryRow("SELECT uuid, votecount, title, url FROM posts WHERE uuid = ?", post.UUID)
+	row := db.QueryRow("SELECT uuid, author, votecount, title, url, createdat FROM posts WHERE uuid = ?", post.UUID)
 
 	var queriedPost Post
-	err = row.Scan(&queriedPost.UUID, &queriedPost.VoteCount, &queriedPost.Title, &queriedPost.URL)
+	err = row.Scan(&queriedPost.UUID, &queriedPost.Author, &queriedPost.VoteCount, &queriedPost.Title, &queriedPost.URL, &queriedPost.CreatedAt)
 	require.Nil(t, err)
 
 	assert.Equal(t, post, queriedPost)
@@ -83,12 +63,7 @@ func Test_deletion_of_non_existent_post_returns_no_error(t *testing.T) {
 func Test_deletion_of_existing_post_succeeds(t *testing.T) {
 	db := SetupTestDB(t)
 
-	post := Post{
-		UUID:      "1234",
-		VoteCount: 100,
-		Title:     "Test Post",
-		URL:       "https://test.com",
-	}
+	post := GenerateTestPost()
 
 	err := InsertPost(db, post)
 	require.Nil(t, err)
@@ -108,12 +83,7 @@ func Test_retrieval_of_non_existent_post_returns_nil(t *testing.T) {
 func Test_retrieval_of_existing_post_succeeds(t *testing.T) {
 	db := SetupTestDB(t)
 
-	post := Post{
-		UUID:      "1234",
-		VoteCount: 100,
-		Title:     "Test Post",
-		URL:       "https://test.com",
-	}
+	post := GenerateTestPost()
 
 	err := InsertPost(db, post)
 	require.Nil(t, err)
@@ -128,42 +98,14 @@ func Test_retrieval_of_existing_post_succeeds(t *testing.T) {
 func Test_paginated_retrieval_of_posts_succeeds(t *testing.T) {
 	db := SetupTestDB(t)
 
-	posts := []Post{
-		{
-			UUID:      "1",
-			VoteCount: 100,
-			Author:    "unknown",
-			Title:     "Test Post",
-			URL:       "https://test.com",
-			CreatedAt: time.Now().Format(time.RFC3339),
-		},
-		{
-			UUID:      "2",
-			VoteCount: 200,
-			Author:    "unknown",
-			Title:     "Test Post 2",
-			URL:       "https://test2.com",
-			CreatedAt: time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
-		},
-		{
-			UUID:      "3",
-			VoteCount: 300,
-			Author:    "unknown",
-			Title:     "Test Post 3",
-			URL:       "https://test3.com",
-			CreatedAt: time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
-		},
-		{
-			UUID:      "4",
-			VoteCount: 300,
-			Author:    "unknown",
-			Title:     "Test Post 4",
-			URL:       "https://test4.com",
-			CreatedAt: time.Now().Add(-3 * time.Hour).Format(time.RFC3339),
-		},
-	}
+	var posts []Post
+	numPosts := 4
 
-	for _, post := range posts {
+	for i := 0; i < numPosts; i++ {
+		post := GenerateTestPost()
+		post.CreatedAt = time.Now().Add(-1 * time.Duration(i) * time.Hour).Format(time.RFC3339)
+		posts = append(posts, post)
+
 		err := InsertPost(db, post)
 		require.Nil(t, err)
 	}
@@ -195,12 +137,7 @@ func Test_updating_vote_count_of_non_existent_post_returns_no_error(t *testing.T
 func Test_updating_vote_count_of_existent_post_succeeds(t *testing.T) {
 	db := SetupTestDB(t)
 
-	post := Post{
-		UUID:      "1234",
-		VoteCount: 100,
-		Title:     "Test Post",
-		URL:       "https://test.com",
-	}
+	post := GenerateTestPost()
 
 	err := InsertPost(db, post)
 	require.Nil(t, err)
@@ -218,12 +155,7 @@ func Test_updating_vote_count_of_existent_post_succeeds(t *testing.T) {
 func Test_updating_vote_count_with_negative_increment_succeds(t *testing.T) {
 	db := SetupTestDB(t)
 
-	post := Post{
-		UUID:      "1234",
-		VoteCount: 100,
-		Title:     "Test Post",
-		URL:       "https://test.com",
-	}
+	post := GenerateTestPost()
 
 	err := InsertPost(db, post)
 	require.Nil(t, err)
