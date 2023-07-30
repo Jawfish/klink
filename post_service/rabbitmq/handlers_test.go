@@ -1,29 +1,13 @@
 package rabbitmq
 
 import (
-	"database/sql"
-	"fmt"
 	"testing"
 
-	database "service/db"
+	"service/database"
 )
 
-func setupDB() (*sql.DB, error) {
-	db := database.OpenDatabase(":memory:")
-	if db == nil {
-		return nil, fmt.Errorf("Failed to open in-memory DB")
-	}
-
-	database.StartDatabase(db)
-	return db, nil
-}
-
-func TestHandleVote(t *testing.T) {
-	db, err := setupDB()
-	if err != nil {
-		t.Fatalf("Failed to setup in-memory DB: %v", err)
-	}
-	defer db.Close()
+func Test_vote_events_are_handled_as_expected(t *testing.T) {
+	db := database.SetupTestDB(t)
 
 	tests := []struct {
 		name    string
@@ -87,12 +71,8 @@ func TestHandleVote(t *testing.T) {
 	}
 }
 
-func TestHandlePost(t *testing.T) {
-	db, err := setupDB()
-	if err != nil {
-		t.Fatalf("Failed to setup in-memory DB: %v", err)
-	}
-	defer db.Close()
+func Test_post_events_are_handled_as_expected(t *testing.T) {
+	db := database.SetupTestDB(t)
 
 	tests := []struct {
 		name    string

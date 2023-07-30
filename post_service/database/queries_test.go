@@ -1,7 +1,6 @@
-package db
+package database
 
 import (
-	"database/sql"
 	"testing"
 	"time"
 
@@ -9,15 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupDatabase(t *testing.T) *sql.DB {
-	db := OpenDatabase(":memory:")
-	require.NotNil(t, db)
-	StartDatabase(db)
-	return db
-}
-
 func Test_valid_post_insertion_succeeds(t *testing.T) {
-	db := setupDatabase(t)
+	db := SetupTestDB(t)
 
 	post := Post{
 		UUID:      "1234",
@@ -31,7 +23,7 @@ func Test_valid_post_insertion_succeeds(t *testing.T) {
 }
 
 func Test_duplicate_post_insertion_fails(t *testing.T) {
-	db := setupDatabase(t)
+	db := SetupTestDB(t)
 
 	post := Post{
 		UUID:      "1234",
@@ -60,7 +52,7 @@ func Test_post_insertion_with_nil_database_returns_error(t *testing.T) {
 }
 
 func Test_post_insertion_verifies_correctly(t *testing.T) {
-	db := setupDatabase(t)
+	db := SetupTestDB(t)
 
 	post := Post{
 		UUID:      "1234",
@@ -82,14 +74,14 @@ func Test_post_insertion_verifies_correctly(t *testing.T) {
 }
 
 func Test_deletion_of_non_existent_post_returns_no_error(t *testing.T) {
-	db := setupDatabase(t)
+	db := SetupTestDB(t)
 
 	err := DeletePost(db, "non-existent")
 	require.Nil(t, err)
 }
 
 func Test_deletion_of_existing_post_succeeds(t *testing.T) {
-	db := setupDatabase(t)
+	db := SetupTestDB(t)
 
 	post := Post{
 		UUID:      "1234",
@@ -106,7 +98,7 @@ func Test_deletion_of_existing_post_succeeds(t *testing.T) {
 }
 
 func Test_retrieval_of_non_existent_post_returns_nil(t *testing.T) {
-	db := setupDatabase(t)
+	db := SetupTestDB(t)
 
 	post, err := GetPost(db, "non-existent")
 	require.Nil(t, err)
@@ -114,7 +106,7 @@ func Test_retrieval_of_non_existent_post_returns_nil(t *testing.T) {
 }
 
 func Test_retrieval_of_existing_post_succeeds(t *testing.T) {
-	db := setupDatabase(t)
+	db := SetupTestDB(t)
 
 	post := Post{
 		UUID:      "1234",
@@ -134,7 +126,7 @@ func Test_retrieval_of_existing_post_succeeds(t *testing.T) {
 }
 
 func Test_paginated_retrieval_of_posts_succeeds(t *testing.T) {
-	db := setupDatabase(t)
+	db := SetupTestDB(t)
 
 	posts := []Post{
 		{
@@ -194,14 +186,14 @@ func Test_paginated_retrieval_of_posts_succeeds(t *testing.T) {
 }
 
 func Test_updating_vote_count_of_non_existent_post_returns_no_error(t *testing.T) {
-	db := setupDatabase(t)
+	db := SetupTestDB(t)
 
 	err := UpdateVoteCount(db, "non-existent", 1)
 	require.Nil(t, err)
 }
 
 func Test_updating_vote_count_of_existent_post_succeeds(t *testing.T) {
-	db := setupDatabase(t)
+	db := SetupTestDB(t)
 
 	post := Post{
 		UUID:      "1234",
@@ -224,7 +216,7 @@ func Test_updating_vote_count_of_existent_post_succeeds(t *testing.T) {
 }
 
 func Test_updating_vote_count_with_negative_increment_succeds(t *testing.T) {
-	db := setupDatabase(t)
+	db := SetupTestDB(t)
 
 	post := Post{
 		UUID:      "1234",

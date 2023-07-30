@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"database/sql"
 	"fmt"
-	database "service/db"
+	"service/database"
 	"service/logger"
 	"time"
 )

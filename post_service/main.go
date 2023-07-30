@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"service/config"
-	database "service/db"
+	"service/database"
 	"service/logger"
 	"service/rabbitmq"
 	"service/utils"

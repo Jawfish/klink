@@ -1,4 +1,4 @@
-package db
+package database
 
 type Vote struct {
 	ID       int

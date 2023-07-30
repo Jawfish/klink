@@ -1,7 +1,6 @@
 package api
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,25 +12,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	database "service/db"
+	"service/database"
 )
 
-func setupDB() (*sql.DB, error) {
-	db := database.OpenDatabase(":memory:")
-	if db == nil {
-		return nil, fmt.Errorf("Failed to open in-memory DB")
-	}
-
-	database.StartDatabase(db)
-	return db, nil
-}
-
 func Test_posts_can_be_retrieved_in_paginated_manner(t *testing.T) {
-	db, err := setupDB()
-	if err != nil {
-		t.Fatalf("Failed to setup in-memory DB: %v", err)
-	}
-	defer db.Close()
+	db := database.SetupTestDB(t)
 
 	// Insert dummy data
 	for i := 1; i <= 25; i++ {
@@ -69,4 +54,44 @@ func Test_posts_can_be_retrieved_in_paginated_manner(t *testing.T) {
 	testPage(1, defaultPageSize, "test-post-1", "test-post-10")
 	testPage(2, defaultPageSize, "test-post-11", "test-post-20")
 	testPage(3, 5, "test-post-21", "test-post-25")
+}
+
+func Test_response_conforms_to_expected_schema(t *testing.T) {
+	db := database.SetupTestDB(t)
+
+	now := time.Now().Format(time.RFC3339)
+
+	// Insert a dummy post
+	post := database.Post{
+		UUID:      "test-post",
+		Author:    "test-author",
+		VoteCount: 1,
+		Title:     "test title",
+		URL:       "test-url",
+		CreatedAt: now,
+	}
+	err := database.InsertPost(db, post)
+	require.NoError(t, err)
+
+	req, err := http.NewRequest("GET", "/posts?page=1", nil)
+	require.NoError(t, err)
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(getPosts(db))
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var posts []Post
+	err = json.NewDecoder(rr.Body).Decode(&posts)
+	require.NoError(t, err)
+
+	// Check that the response conforms to the expected schema
+	require.Len(t, posts, 1)
+	assert.Equal(t, "test-post", posts[0].UUID)
+	assert.Equal(t, "test-author", posts[0].Author)
+	assert.Equal(t, 1, posts[0].VoteCount)
+	assert.Equal(t, "test title", posts[0].Title)
+	assert.Equal(t, "test-url", posts[0].URL)
+	assert.Equal(t, now, posts[0].CreatedAt)
 }

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	database "service/db"
+	"service/database"
 )
 
 const defaultPageSize = 10
