@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	database "service/db"
 	"service/logger"
 	"service/utils"
 	"time"
@@ -13,8 +12,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func StartConsumer(db *sql.DB) {
-	logger.Log("info", "Starting RabbitMQ consumer...", "rabbitmq/rabbitmq.go", "")
+func ConnectToRabbitMQ() (*amqp.Connection, error) {
 	var conn *amqp.Connection
 	var err error
 
@@ -41,13 +39,18 @@ func StartConsumer(db *sql.DB) {
 		time.Sleep(5 * time.Second)
 	}
 
-	defer conn.Close()
+	return conn, err
+}
 
+func OpenChannel(conn *amqp.Connection) (*amqp.Channel, error) {
 	logger.Log("info", "Opening RabbitMQ channel...", "rabbitmq/rabbitmq.go", "")
 	ch, err := conn.Channel()
 	utils.FailOnError(err, "Failed to open a channel")
 	logger.Log("info", "Successfully opened RabbitMQ channel.", "rabbitmq/rabbitmq.go", "")
-	defer ch.Close()
+	return ch, err
+}
+
+func declareQueue(ch *amqp.Channel) (amqp.Queue, error) {
 
 	logger.Log("info", "Declaring RabbitMQ queue...", "rabbitmq/rabbitmq.go", "")
 	queue, err := ch.QueueDeclare(
@@ -62,6 +65,9 @@ func StartConsumer(db *sql.DB) {
 	utils.FailOnError(err, "Failed to declare a queue")
 	logger.Log("info", "Successfully declared RabbitMQ queue.", "rabbitmq/rabbitmq.go", "")
 
+	return queue, err
+}
+func registerConsumer(ch *amqp.Channel, queue amqp.Queue) (<-chan amqp.Delivery, error) {
 	logger.Log("info", "Registering RabbitMQ consumer...", "rabbitmq/rabbitmq.go", "")
 	msgs, err := ch.Consume(
 		queue.Name,
@@ -75,23 +81,73 @@ func StartConsumer(db *sql.DB) {
 	utils.FailOnError(err, "Failed to register a consumer")
 	logger.Log("info", "Successfully registered RabbitMQ consumer.", "rabbitmq/rabbitmq.go", "")
 
-	forever := make(chan bool)
+	return msgs, err
+}
+
+func consumeMessages(db *sql.DB, msgs <-chan amqp.Delivery) {
+	handlers := map[string]func(*sql.DB, []byte) error{
+		string(Upvote): func(db *sql.DB, body []byte) error {
+			var event VoteEvent
+			if err := json.Unmarshal(body, &event); err != nil {
+				return err
+			}
+			return HandleVote(db, event)
+		},
+		string(Downvote): func(db *sql.DB, body []byte) error {
+			var event VoteEvent
+			if err := json.Unmarshal(body, &event); err != nil {
+				return err
+			}
+			return HandleVote(db, event)
+		},
+		string(LinkPost): func(db *sql.DB, body []byte) error {
+			var event PostEvent
+			if err := json.Unmarshal(body, &event); err != nil {
+				return err
+			}
+			return HandlePost(db, event)
+		},
+	}
 
 	go func() {
 		for d := range msgs {
-			logger.Log("info", fmt.Sprintf("Received a message: %s", d.Body), "rabbitmq/rabbitmq.go", "")
-			var post database.Post
-			err := json.Unmarshal(d.Body, &post)
-			if err != nil {
+			var event struct {
+				Type string `json:"type"`
+			}
+
+			// determine the event type
+			if err := json.Unmarshal(d.Body, &event); err != nil {
 				logger.Log("error", fmt.Sprintf("Error decoding JSON: %s", err), "rabbitmq/rabbitmq.go", "")
+				continue
+			}
+
+			// find and execute the right handler
+			if handler, ok := handlers[event.Type]; ok {
+				if err := handler(db, d.Body); err != nil {
+					logger.Log("error", fmt.Sprintf("Error handling '%s' event: %v", event.Type, err), "rabbitmq/rabbitmq.go", "")
+				}
 			} else {
-				logger.Log("info", fmt.Sprintf("Decoded post: %v", post), "rabbitmq/rabbitmq.go", "")
-				database.InsertPost(db, post)
-				logger.Log("info", "Successfully inserted post into the database.", "rabbitmq/rabbitmq.go", "")
+				logger.Log("warning", fmt.Sprintf("No handler for '%s' event", event.Type), "rabbitmq/rabbitmq.go", "")
 			}
 		}
 	}()
+}
+
+func StartConsumer(db *sql.DB, conn *amqp.Connection, ch *amqp.Channel) {
+	logger.Log("info", "Starting RabbitMQ consumer...", "rabbitmq/rabbitmq.go", "")
+
+	defer conn.Close()
+	defer ch.Close()
+
+	queue, err := declareQueue(ch)
+	utils.FailOnError(err, "Failed to declare a queue")
+
+	msgs, err := registerConsumer(ch, queue)
+	utils.FailOnError(err, "Failed to register a consumer")
+
+	go consumeMessages(db, msgs)
 
 	logger.Log("info", " [*] Waiting for messages. To exit press CTRL+C", "rabbitmq/rabbitmq.go", "")
+	forever := make(chan bool)
 	<-forever
 }
