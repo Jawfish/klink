@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"service/database"
+	"service/logger"
 )
 
 const defaultPageSize = 10
@@ -20,6 +21,7 @@ func getPosts(db *sql.DB) http.HandlerFunc {
 
 		posts, err := database.GetPosts(db, (page-1)*defaultPageSize, defaultPageSize)
 		if err != nil {
+			logger.Log("error", err.Error(), "api/api.go", "getPosts")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

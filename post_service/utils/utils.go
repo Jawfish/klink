@@ -1,9 +1,9 @@
 package utils
 
-import "log"
+import "service/logger"
 
 func FailOnError(err error, msg string) {
 	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
+		logger.Log(logger.Error, msg, "utils/utils.go", "")
 	}
 }
