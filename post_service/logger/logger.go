@@ -15,7 +15,7 @@ var Fluentd *fluent.Fluent
 func InitLogger() {
 	port, err := strconv.Atoi(os.Getenv("FLUENTD_PORT"))
 	if err != nil {
-		log.Fatalf("Failed to parse Fluentd port: %v", err)
+		log.Printf("Failed to parse Fluentd port: %v", err)
 	}
 
 	config := fluent.Config{
@@ -25,7 +25,7 @@ func InitLogger() {
 
 	Fluentd, err = fluent.New(config)
 	if err != nil {
-		log.Fatalf("Failed to connect to Fluentd: %v", err)
+		log.Printf("Failed to connect to Fluentd: %v", err)
 	}
 }
 
@@ -44,8 +44,10 @@ func Log(level string, message string, where string, stackTrace string) {
 		"stack_trace": stackTrace,
 	}
 
-	error := Fluentd.Post(os.Getenv("FLUENTD_TAG"), data)
-	if error != nil {
-		log.Fatalf("Failed to post log to Fluentd: %v", error)
+	if Fluentd != nil {
+		error := Fluentd.Post(os.Getenv("FLUENTD_TAG"), data)
+		if error != nil {
+			log.Printf("Failed to post log to Fluentd: %v", error)
+		}
 	}
 }
