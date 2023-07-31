@@ -17,19 +17,21 @@ func LoadEnv() {
 	vars := []string{
 		"HOST_PORT",
 		"HOST_IP",
-		"DB_HOST",
-		"DB_PORT",
-		"DB_USER",
-		"DB_PASS",
-		"DB_NAME",
+		"AUTH_SERVICE_HOST",
+		"AUTH_SERVICE_PORT",
+		"POST_SERVICE_HOST",
+		"POST_SERVICE_PORT",
+		"USER_SERVICE_HOST",
+		"USER_SERVICE_PORT",
 		"RABBITMQ_HOST",
 		"RABBITMQ_PORT",
 		"RABBITMQ_USER",
 		"RABBITMQ_PASS",
-		"RABBITMQ_QUEUE",
+		"RABBITMQ_POST_SERVICE_QUEUE",
 		"FLUENTD_HOST",
 		"FLUENTD_PORT",
 		"FLUENTD_TAG",
+		"LOG_TO_STDOUT",
 	}
 
 	for _, v := range vars {

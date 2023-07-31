@@ -35,12 +35,12 @@ func NewRabbitMQ() (*RabbitMQ, error) {
 
 func (r *RabbitMQ) SendToQueue(queueName string, msg string) error {
 	_, err := r.Channel.QueueDeclare(
-		queueName,
-		false,
-		false,
-		false,
-		false,
-		nil,
+		queueName, // name of the queue
+		true,      // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
 	)
 	if err != nil {
 		return err
