@@ -56,6 +56,7 @@ func handleGetPosts(c *gin.Context) {
 }
 
 func handleCreatePost(c *gin.Context) {
+	// TODO: get PostEvent.Author from auth service before sending to queue
 	queueName := os.Getenv("RABBITMQ_POST_SERVICE_QUEUE")
 	var jsonMessage gin.H
 	if err := c.BindJSON(&jsonMessage); err != nil {
