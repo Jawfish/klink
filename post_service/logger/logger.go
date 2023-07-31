@@ -44,7 +44,9 @@ func Log(level LogLevel, message string, where string, stackTrace string) {
 
 	logMessage := fmt.Sprintf("%s | %s | %s:%d | %s", level, message, file, line, stackTrace)
 
-	fmt.Println(logMessage)
+	if os.Getenv("LOG_TO_STDOUT") == "true" {
+		log.Println(logMessage)
+	}
 
 	data := map[string]string{
 		"host":        os.Getenv("HOSTNAME"),

@@ -5,9 +5,7 @@ RUN apk update && apk add gcc musl-dev
 WORKDIR /app
 
 # Copy project files to the working directory
-COPY go.mod go.sum ./
-COPY cmd .
-COPY internal .
+COPY . .
 
 RUN go mod download
 

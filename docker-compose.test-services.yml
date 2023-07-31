@@ -42,6 +42,8 @@ services:
   post:
     build:
       context: ./post_service
+    ports:
+      - "8002:8002"
     environment:
       - HOST_IP=0.0.0.0
       - HOST_PORT=8002
@@ -58,12 +60,7 @@ services:
       - FLUENTD_HOST=fluentd
       - FLUENTD_PORT=24224
       - FLUENTD_TAG=post
-
-  post_db:
-    image: postgres:latest
-    environment:
-      POSTGRES_USER: test
-      POSTGRES_PASSWORD: test
+      - LOG_TO_STDOUT=false
 
   fluentd:
     image: fluent/fluentd:v1.16
@@ -79,8 +76,8 @@ services:
       - RABBITMQ_DEFAULT_USER=test
       - RABBITMQ_DEFAULT_PASS=test
     ports:
-      - "15672:15672"
-      - "5672:5672"
+      - "0.0.0.0:15672:15672"
+      - "0.0.0.0:5672:5672"
 
 networks:
   klink_net:

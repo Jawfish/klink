@@ -31,8 +31,6 @@ func HandleVote(db *sql.DB, e VoteEvent) error {
 		return err
 	}
 
-	logger.Log("info", fmt.Sprintf("Successfully updated vote count for post: %s", e.PostUUID), "rabbitmq/rabbitmq.go", "")
-
 	return nil
 }
 
@@ -57,6 +55,5 @@ func HandlePost(db *sql.DB, e PostEvent) error {
 		return err
 	}
 
-	logger.Log("info", fmt.Sprintf("Successfully inserted post: %v", e), "rabbitmq/rabbitmq.go", "")
 	return nil
 }
