@@ -20,9 +20,7 @@ const (
 )
 
 type PostEvent struct {
-	UUID  string   `json:"uuid"`
-	Author string  `json:"author"`
-	Title string   `json:"title"`
-	URL   string   `json:"url"`
-	Type  PostType `json:"type"`
+	CreatorUUID string `json:"creator_uuid"`
+	Title       string `json:"title"`
+	URL         string `json:"url"`
 }

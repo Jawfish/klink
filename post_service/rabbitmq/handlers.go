@@ -6,6 +6,8 @@ import (
 	"service/database"
 	"service/logger"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 func HandleVote(db *sql.DB, e VoteEvent) error {
@@ -35,18 +37,20 @@ func HandleVote(db *sql.DB, e VoteEvent) error {
 }
 
 func HandlePost(db *sql.DB, e PostEvent) error {
-	if e.UUID == "" || e.Title == "" || e.URL == "" {
+	if e.CreatorUUID == "" || e.Title == "" || e.URL == "" {
 		logger.Log("error", fmt.Sprintf("Invalid post event: %v", e), "rabbitmq/handlers.go", "")
 		return fmt.Errorf("invalid post event: %v", e)
 	}
 
+	newUUID := uuid.New().String()
+
 	post := database.Post{
-		UUID:      e.UUID,
-		Author:    e.Author,
-		VoteCount: 0,
-		Title:     e.Title,
-		URL:       e.URL,
-		CreatedAt: time.Now().Format(time.RFC3339),
+		PostUUID:    newUUID,
+		CreatorUUID: e.CreatorUUID,
+		VoteCount:   0,
+		Title:       e.Title,
+		URL:         e.URL,
+		CreatedAt:   time.Now().Format(time.RFC3339),
 	}
 
 	err := database.InsertPost(db, post)

@@ -22,7 +22,7 @@ func Test_posts_can_be_retrieved_in_paginated_manner(t *testing.T) {
 	// Insert dummy data
 	for i := 1; i <= numPosts; i++ {
 		post := database.GenerateTestPost()
-		post.UUID = "test-post-" + strconv.Itoa(i)
+		post.PostUUID = "test-post-" + strconv.Itoa(i)
 		post.CreatedAt = time.Now().Add(-time.Duration(i) * time.Minute).Format(time.RFC3339)
 		err := database.InsertPost(db, post)
 		require.NoError(t, err)
@@ -39,12 +39,12 @@ func Test_posts_can_be_retrieved_in_paginated_manner(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var posts []database.Post
+		var posts []Post
 		err = json.NewDecoder(rr.Body).Decode(&posts)
 		require.NoError(t, err)
 		assert.Len(t, posts, expectedLen)
-		assert.Equal(t, expectedFirstUUID, posts[0].UUID)
-		assert.Equal(t, expectedLastUUID, posts[len(posts)-1].UUID)
+		assert.Equal(t, expectedFirstUUID, posts[0].PostUUID)
+		assert.Equal(t, expectedLastUUID, posts[len(posts)-1].PostUUID)
 	}
 
 	testPage(1, defaultPageSize, "test-post-1", "test-post-10")
@@ -75,8 +75,8 @@ func Test_response_conforms_to_expected_schema(t *testing.T) {
 
 	// Check that the response conforms to the expected schema
 	require.Len(t, posts, 1)
-	assert.Equal(t, post.UUID, posts[0].UUID)
-	assert.Equal(t, post.Author, posts[0].Author)
+	assert.Equal(t, post.PostUUID, posts[0].PostUUID)
+	assert.Equal(t, post.CreatorUUID, posts[0].CreatorUUID)
 	assert.Equal(t, post.VoteCount, posts[0].VoteCount)
 	assert.Equal(t, post.Title, posts[0].Title)
 	assert.Equal(t, post.URL, posts[0].URL)

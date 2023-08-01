@@ -10,7 +10,7 @@ import (
 
 func StartDatabase(db *sql.DB) {
 	logger.Log("info", "Creating posts table...", "db/db.go", "")
-	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS posts (uuid TEXT PRIMARY KEY, author TEXT, votecount INTEGER, title TEXT, url TEXT, createdat TEXT)")
+	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS posts (post_uuid TEXT PRIMARY KEY, creator_uuid TEXT, votecount INTEGER, title TEXT, url TEXT, createdat TEXT)")
 	if err != nil {
 		logger.Log("error", fmt.Sprintf("Failed to prepare statement: %v", err), "db/db.go", "")
 	}

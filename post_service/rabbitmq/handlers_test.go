@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"service/database"
+
+	"github.com/google/uuid"
 )
 
 func Test_vote_events_are_handled_as_expected(t *testing.T) {
@@ -82,40 +84,36 @@ func Test_post_events_are_handled_as_expected(t *testing.T) {
 		{
 			name: "HandlePost should insert post",
 			event: PostEvent{
-				UUID:  "test-post",
-				Title: "test title",
-				URL:   "test-url",
-				Type:  LinkPost,
+				Title:       "test title",
+				CreatorUUID: uuid.New().String(),
+				URL:         "test-url",
 			},
 			wantErr: false,
 		},
 		{
-			name: "Empty post UUID should return error",
+			name: "Empty creator UUID should return error",
 			event: PostEvent{
-				UUID:  "",
-				Title: "test title",
-				URL:   "test-url",
-				Type:  LinkPost,
+				Title:       "test title",
+				CreatorUUID: "",
+				URL:         "test-url",
 			},
 			wantErr: true,
 		},
 		{
 			name: "Empty post title should return error",
 			event: PostEvent{
-				UUID:  "test-post",
-				Title: "",
-				URL:   "test-url",
-				Type:  LinkPost,
+				Title:       "",
+				CreatorUUID: uuid.New().String(),
+				URL:         "test-url",
 			},
 			wantErr: true,
 		},
 		{
 			name: "Empty post URL should return error",
 			event: PostEvent{
-				UUID:  "test-post",
-				Title: "test title",
-				URL:   "",
-				Type:  LinkPost,
+				Title:       "test title",
+				CreatorUUID: uuid.New().String(),
+				URL:         "",
 			},
 			wantErr: true,
 		},

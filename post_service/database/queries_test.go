@@ -44,10 +44,10 @@ func Test_post_insertion_verifies_correctly(t *testing.T) {
 	err := InsertPost(db, post)
 	require.Nil(t, err)
 
-	row := db.QueryRow("SELECT uuid, author, votecount, title, url, createdat FROM posts WHERE uuid = ?", post.UUID)
+	row := db.QueryRow("SELECT post_uuid, creator_uuid, votecount, title, url, createdat FROM posts WHERE post_uuid = ?", post.PostUUID)
 
 	var queriedPost Post
-	err = row.Scan(&queriedPost.UUID, &queriedPost.Author, &queriedPost.VoteCount, &queriedPost.Title, &queriedPost.URL, &queriedPost.CreatedAt)
+	err = row.Scan(&queriedPost.PostUUID, &queriedPost.CreatorUUID, &queriedPost.VoteCount, &queriedPost.Title, &queriedPost.URL, &queriedPost.CreatedAt)
 	require.Nil(t, err)
 
 	assert.Equal(t, post, queriedPost)
@@ -68,7 +68,7 @@ func Test_deletion_of_existing_post_succeeds(t *testing.T) {
 	err := InsertPost(db, post)
 	require.Nil(t, err)
 
-	err = DeletePost(db, post.UUID)
+	err = DeletePost(db, post.PostUUID)
 	require.Nil(t, err)
 }
 
@@ -88,7 +88,7 @@ func Test_retrieval_of_existing_post_succeeds(t *testing.T) {
 	err := InsertPost(db, post)
 	require.Nil(t, err)
 
-	queriedPost, err := GetPost(db, post.UUID)
+	queriedPost, err := GetPost(db, post.PostUUID)
 	require.Nil(t, err)
 	require.NotNil(t, queriedPost)
 
@@ -115,16 +115,16 @@ func Test_paginated_retrieval_of_posts_succeeds(t *testing.T) {
 	require.NotNil(t, queriedPosts)
 
 	// Expect the newest posts to be returned first
-	assert.Equal(t, posts[0].UUID, queriedPosts[0].UUID)
-	assert.Equal(t, posts[1].UUID, queriedPosts[1].UUID)
+	assert.Equal(t, posts[0].PostUUID, queriedPosts[0].PostUUID)
+	assert.Equal(t, posts[1].PostUUID, queriedPosts[1].PostUUID)
 
 	queriedPosts, err = GetPosts(db, 2, 2)
 	require.Nil(t, err)
 	require.NotNil(t, queriedPosts)
 
 	// // The second page should start with the second oldest post
-	assert.Equal(t, posts[2].UUID, queriedPosts[0].UUID)
-	assert.Equal(t, posts[3].UUID, queriedPosts[1].UUID)
+	assert.Equal(t, posts[2].PostUUID, queriedPosts[0].PostUUID)
+	assert.Equal(t, posts[3].PostUUID, queriedPosts[1].PostUUID)
 }
 
 func Test_updating_vote_count_of_non_existent_post_returns_no_error(t *testing.T) {
@@ -142,10 +142,10 @@ func Test_updating_vote_count_of_existent_post_succeeds(t *testing.T) {
 	err := InsertPost(db, post)
 	require.Nil(t, err)
 
-	err = UpdateVoteCount(db, post.UUID, 1)
+	err = UpdateVoteCount(db, post.PostUUID, 1)
 	require.Nil(t, err)
 
-	queriedPost, err := GetPost(db, post.UUID)
+	queriedPost, err := GetPost(db, post.PostUUID)
 	require.Nil(t, err)
 	require.NotNil(t, queriedPost)
 
@@ -160,10 +160,10 @@ func Test_updating_vote_count_with_negative_increment_succeds(t *testing.T) {
 	err := InsertPost(db, post)
 	require.Nil(t, err)
 
-	err = UpdateVoteCount(db, post.UUID, -1)
+	err = UpdateVoteCount(db, post.PostUUID, -1)
 	require.Nil(t, err)
 
-	queriedPost, err := GetPost(db, post.UUID)
+	queriedPost, err := GetPost(db, post.PostUUID)
 	require.Nil(t, err)
 	require.NotNil(t, queriedPost)
 
