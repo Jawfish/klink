@@ -51,12 +51,68 @@ func handleAuth(c *gin.Context) {
 	proxyRequest(c, os.Getenv("AUTH_SERVICE_HOST"), os.Getenv("AUTH_SERVICE_PORT"))
 }
 
+func getPosts(serviceHost string, servicePort string) ([]Post, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", "http://"+serviceHost+":"+servicePort+"/posts", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var posts []Post
+	err = json.NewDecoder(resp.Body).Decode(&posts)
+	if err != nil {
+		return nil, err
+	}
+
+	return posts, nil
+}
+
 func handleGetPosts(c *gin.Context) {
-	proxyRequest(c, os.Getenv("POST_SERVICE_HOST"), os.Getenv("POST_SERVICE_PORT"))
+	posts, err := getPosts(os.Getenv("POST_SERVICE_HOST"), os.Getenv("POST_SERVICE_PORT"))
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	client := &http.Client{}
+
+	serviceHost := os.Getenv("USER_SERVICE_HOST")
+	servicePort := os.Getenv("USER_SERVICE_PORT")
+
+	for i, post := range posts {
+		req, err := http.NewRequest("GET", "http://"+serviceHost+":"+servicePort+"/users/"+post.PostUUID, nil)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		defer resp.Body.Close()
+
+		var username map[string]string
+		err = json.NewDecoder(resp.Body).Decode(&username)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		posts[i].Author = username["username"]
+	}
+
+	c.JSON(200, posts)
 }
 
 func handleCreatePost(c *gin.Context) {
-	// TODO: get PostEvent.Author from auth service before sending to queue
 	queueName := os.Getenv("RABBITMQ_POST_SERVICE_QUEUE")
 	var jsonMessage gin.H
 	if err := c.BindJSON(&jsonMessage); err != nil {
@@ -109,15 +165,49 @@ func handleVote(c *gin.Context) {
 	})
 }
 
+func jwtAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token := c.GetHeader("Authorization")
+		if token == "" {
+			c.AbortWithStatusJSON(401, gin.H{"error": "No Authorization header provided"})
+			return
+		}
+
+		serviceHost := os.Getenv("AUTH_SERVICE_HOST")
+		servicePort := os.Getenv("AUTH_SERVICE_PORT")
+		client := &http.Client{}
+		req, err := http.NewRequest("GET", "http://"+serviceHost+":"+servicePort+"/user-identity", nil)
+
+		if err != nil {
+			c.AbortWithStatusJSON(500, gin.H{"error": "Could not validate token"})
+			return
+		}
+
+		req.Header.Add("Authorization", token)
+
+		resp, err := client.Do(req)
+		if err != nil || resp.StatusCode != 200 {
+			c.AbortWithStatusJSON(401, gin.H{"error": "Invalid token"})
+			return
+		}
+
+		c.Next()
+	}
+}
+
 func Run() {
 	if err := SetupRabbitMQ(); err != nil {
 		log.Fatal(err)
 	}
 	r := gin.Default()
+	r.GET("/posts", handleGetPosts)
+	r.POST("/register", handleAuth)
+	r.POST("/token", handleAuth)
+
+	// require auth for all routes below
+	r.Use(jwtAuthMiddleware())
+
 	r.POST("/posts", handleCreatePost)
 	r.PATCH("/posts/:post_id", handleVote)
-	r.GET("/posts", handleGetPosts)
-	r.POST("/auth/register", handleAuth)
-	r.POST("/auth/token", handleAuth)
 	r.Run(os.Getenv("HOST_IP") + ":" + os.Getenv("HOST_PORT"))
 }

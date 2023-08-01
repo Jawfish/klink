@@ -35,9 +35,9 @@
                     "raw": "{\r\n    \"username\": \"username\",\r\n    \"unhashed_password\": \"unhashed_password\"\r\n}"
                 },
                 "url": {
-                    "raw": "{{AUTH_SERVICE_URL}}/register",
+                    "raw": "{{GATEWAY_SERVICE_URL}}/register",
                     "host": [
-                        "{{AUTH_SERVICE_URL}}"
+                        "{{GATEWAY_SERVICE_URL}}"
                     ],
                     "path": [
                         "register"
@@ -75,9 +75,9 @@
                     "raw": "{\r\n    \"username\": \"username\",\r\n    \"unhashed_password\": \"unhashed_password\"\r\n}"
                 },
                 "url": {
-                    "raw": "{{AUTH_SERVICE_URL}}/register",
+                    "raw": "{{GATEWAY_SERVICE_URL}}/register",
                     "host": [
-                        "{{AUTH_SERVICE_URL}}"
+                        "{{GATEWAY_SERVICE_URL}}"
                     ],
                     "path": [
                         "register"
@@ -135,9 +135,9 @@
                     ]
                 },
                 "url": {
-                    "raw": "{{AUTH_SERVICE_URL}}/token",
+                    "raw": "{{GATEWAY_SERVICE_URL}}/token",
                     "host": [
-                        "{{AUTH_SERVICE_URL}}"
+                        "{{GATEWAY_SERVICE_URL}}"
                     ],
                     "path": [
                         "token"
@@ -192,9 +192,9 @@
                     ]
                 },
                 "url": {
-                    "raw": "{{AUTH_SERVICE_URL}}/token",
+                    "raw": "{{GATEWAY_SERVICE_URL}}/token",
                     "host": [
-                        "{{AUTH_SERVICE_URL}}"
+                        "{{GATEWAY_SERVICE_URL}}"
                     ],
                     "path": [
                         "token"
@@ -217,7 +217,10 @@
                             "pm.test(\"Body contains uuid\", function () {\r",
                             "    pm.response.to.have.jsonBody(\"uuid\");\r",
                             "});\r",
-                            ""
+                            "\r",
+                            "let jsonResponse = pm.response.json();\r",
+                            "\r",
+                            "pm.environment.set(\"uuid\", jsonResponse.uuid);"
                         ],
                         "type": "text/javascript"
                     }
@@ -286,7 +289,7 @@
             "response": []
         },
         {
-            "name": "Posts can be created via gateway service",
+            "name": "Posts can be created via gateway service when logged in",
             "event": [
                 {
                     "listen": "test",
@@ -294,6 +297,98 @@
                         "exec": [
                             "pm.test(\"Status code is 200\", function () {\r",
                             "    pm.response.to.have.status(200);\r",
+                            "});\r",
+                            ""
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt}}",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\r\n    \"title\": \"test title\",\r\n    \"url\": \"https://test.com\",\r\n    \"creator_uuid\": \"{{uuid}}\",\r\n    \"type\": \"link\"\r\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{GATEWAY_SERVICE_URL}}/posts",
+                    "host": [
+                        "{{GATEWAY_SERVICE_URL}}"
+                    ],
+                    "path": [
+                        "posts"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Posts can't be created via gateway service with invalid JWT",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 401\", function () {\r",
+                            "    pm.response.to.have.status(401);\r",
+                            "});\r",
+                            ""
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer invalid_token",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\r\n    \"uuid\": \"test-uuid\",\r\n    \"title\": \"test title\",\r\n    \"url\": \"https://test.com\",\r\n    \"type\": \"link\"\r\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{GATEWAY_SERVICE_URL}}/posts",
+                    "host": [
+                        "{{GATEWAY_SERVICE_URL}}"
+                    ],
+                    "path": [
+                        "posts"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Posts can't be created via gateway service when not logged in",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 401\", function () {\r",
+                            "    pm.response.to.have.status(401);\r",
                             "});\r",
                             ""
                         ],
@@ -341,35 +436,8 @@
                             "\r",
                             "    pm.expect(Array.isArray(data)).to.be.true;\r",
                             "\r",
-                            "    pm.expect(data[0]).to.have.keys('UUID', 'Author', 'VoteCount', 'Title', 'URL', 'CreatedAt');\r",
-                            "});\r",
-                            "\r",
-                            "const url = pm.variables.get(\"GATEWAY_SERVICE_URL\");\r",
-                            "const count = 11;\r",
-                            "\r",
-                            "for(let i = 0; i < count; i++) {\r",
-                            "    pm.sendRequest({\r",
-                            "        url: `${url}/posts`,\r",
-                            "        method: 'POST',\r",
-                            "        header: 'Content-Type:application/json',\r",
-                            "        body: {\r",
-                            "            mode: 'raw',\r",
-                            "            raw: JSON.stringify({\r",
-                            "                UUID: `test-uuid-${i}`,\r",
-                            "                Title: `test title ${i}`,\r",
-                            "                URL: `https://test-${i}.com`,\r",
-                            "                Type: \"link\"\r",
-                            "\r",
-                            "            })\r",
-                            "        }\r",
-                            "    }, (error, response) => {\r",
-                            "        if (error) {\r",
-                            "            console.log(error);\r",
-                            "        } else {\r",
-                            "            pm.expect(response.code).to.eql(200);\r",
-                            "        }\r",
-                            "    });\r",
-                            "}"
+                            "    pm.expect(data[0]).to.have.keys('post_uuid', 'creator_uuid', 'voteCount', 'title', 'url', 'createdAt');\r",
+                            "});"
                         ],
                         "type": "text/javascript"
                     }
@@ -391,7 +459,7 @@
             "response": []
         },
         {
-            "name": "Pagination retrieves correct posts",
+            "name": "Posts can be retrieved from gateway service",
             "event": [
                 {
                     "listen": "test",
@@ -406,15 +474,8 @@
                             "\r",
                             "    pm.expect(Array.isArray(data)).to.be.true;\r",
                             "\r",
-                            "    pm.expect(data[0]).to.have.keys('UUID', 'Author', 'VoteCount', 'Title', 'URL', 'CreatedAt');\r",
-                            "\r",
-                            "    pm.expect(data[0].UUID).to.eql('test-uuid');\r",
-                            "    pm.expect(data[0].Author).to.eql('');\r",
-                            "    pm.expect(data[0].VoteCount).to.eql(0);\r",
-                            "    pm.expect(data[0].Title).to.eql('test title');\r",
-                            "    pm.expect(data[0].URL).to.eql('https://test.com');\r",
-                            "});\r",
-                            ""
+                            "    pm.expect(data[0]).to.have.keys('post_uuid', 'author', 'vote_count', 'title', 'url', 'created_at');\r",
+                            "});"
                         ],
                         "type": "text/javascript"
                     }
@@ -424,18 +485,12 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                    "raw": "{{POST_SERVICE_URL}}/posts?page=2",
+                    "raw": "{{GATEWAY_SERVICE_URL}}/posts",
                     "host": [
-                        "{{POST_SERVICE_URL}}"
+                        "{{GATEWAY_SERVICE_URL}}"
                     ],
                     "path": [
                         "posts"
-                    ],
-                    "query": [
-                        {
-                            "key": "page",
-                            "value": "2"
-                        }
                     ]
                 }
             },

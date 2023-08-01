@@ -8,9 +8,9 @@ const (
 )
 
 type VoteEvent struct {
+	Type      VoteType `json:"type"`
 	PostUUID  string   `json:"post_uuid"`
 	VoterUUID string   `json:"voter_uuid"`
-	Type      VoteType `json:"type"`
 }
 
 type PostType string
@@ -20,7 +20,8 @@ const (
 )
 
 type PostEvent struct {
-	CreatorUUID string `json:"creator_uuid"`
-	Title       string `json:"title"`
-	URL         string `json:"url"`
+	Type        PostType `json:"type"`
+	CreatorUUID string   `json:"creator_uuid"`
+	Title       string   `json:"title"`
+	URL         string   `json:"url"`
 }
