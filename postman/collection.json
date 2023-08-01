@@ -255,7 +255,7 @@
                             "    pm.response.to.have.status(401);\r",
                             "});\r",
                             "\r",
-                            "pm.test(\"Body contains uuid\", function () {\r",
+                            "pm.test(\"Body doesn't contain uuid\", function () {\r",
                             "    pm.response.to.not.have.jsonBody(\"uuid\");\r",
                             "});\r",
                             ""
@@ -280,6 +280,162 @@
                     ],
                     "path": [
                         "user-identity"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Posts can be created via gateway service",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200\", function () {\r",
+                            "    pm.response.to.have.status(200);\r",
+                            "});\r",
+                            ""
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\r\n    \"uuid\": \"test-uuid\",\r\n    \"title\": \"test title\",\r\n    \"url\": \"https://test.com\",\r\n    \"type\": \"link\"\r\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{GATEWAY_SERVICE_URL}}/posts",
+                    "host": [
+                        "{{GATEWAY_SERVICE_URL}}"
+                    ],
+                    "path": [
+                        "posts"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Posts can be retrieved from post service",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200\", function () {\r",
+                            "    pm.response.to.have.status(200);\r",
+                            "});\r",
+                            "\r",
+                            "pm.test(\"Response structure is correct\", function () {\r",
+                            "    const data = pm.response.json();\r",
+                            "\r",
+                            "    pm.expect(Array.isArray(data)).to.be.true;\r",
+                            "\r",
+                            "    pm.expect(data[0]).to.have.keys('UUID', 'Author', 'VoteCount', 'Title', 'URL', 'CreatedAt');\r",
+                            "});\r",
+                            "\r",
+                            "const url = pm.variables.get(\"GATEWAY_SERVICE_URL\");\r",
+                            "const count = 11;\r",
+                            "\r",
+                            "for(let i = 0; i < count; i++) {\r",
+                            "    pm.sendRequest({\r",
+                            "        url: `${url}/posts`,\r",
+                            "        method: 'POST',\r",
+                            "        header: 'Content-Type:application/json',\r",
+                            "        body: {\r",
+                            "            mode: 'raw',\r",
+                            "            raw: JSON.stringify({\r",
+                            "                UUID: `test-uuid-${i}`,\r",
+                            "                Title: `test title ${i}`,\r",
+                            "                URL: `https://test-${i}.com`,\r",
+                            "                Type: \"link\"\r",
+                            "\r",
+                            "            })\r",
+                            "        }\r",
+                            "    }, (error, response) => {\r",
+                            "        if (error) {\r",
+                            "            console.log(error);\r",
+                            "        } else {\r",
+                            "            pm.expect(response.code).to.eql(200);\r",
+                            "        }\r",
+                            "    });\r",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{POST_SERVICE_URL}}/posts",
+                    "host": [
+                        "{{POST_SERVICE_URL}}"
+                    ],
+                    "path": [
+                        "posts"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Pagination retrieves correct posts",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 200\", function () {\r",
+                            "    pm.response.to.have.status(200);\r",
+                            "});\r",
+                            "\r",
+                            "pm.test(\"Response structure is correct\", function () {\r",
+                            "    const data = pm.response.json();\r",
+                            "\r",
+                            "    pm.expect(Array.isArray(data)).to.be.true;\r",
+                            "\r",
+                            "    pm.expect(data[0]).to.have.keys('UUID', 'Author', 'VoteCount', 'Title', 'URL', 'CreatedAt');\r",
+                            "\r",
+                            "    pm.expect(data[0].UUID).to.eql('test-uuid');\r",
+                            "    pm.expect(data[0].Author).to.eql('');\r",
+                            "    pm.expect(data[0].VoteCount).to.eql(0);\r",
+                            "    pm.expect(data[0].Title).to.eql('test title');\r",
+                            "    pm.expect(data[0].URL).to.eql('https://test.com');\r",
+                            "});\r",
+                            ""
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{POST_SERVICE_URL}}/posts?page=2",
+                    "host": [
+                        "{{POST_SERVICE_URL}}"
+                    ],
+                    "path": [
+                        "posts"
+                    ],
+                    "query": [
+                        {
+                            "key": "page",
+                            "value": "2"
+                        }
                     ]
                 }
             },

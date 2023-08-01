@@ -42,7 +42,7 @@ func HandlePost(db *sql.DB, e PostEvent) error {
 
 	post := database.Post{
 		UUID:      e.UUID,
-		Author:    "unknown", // TODO: get from auth service
+		Author:    e.Author,
 		VoteCount: 0,
 		Title:     e.Title,
 		URL:       e.URL,

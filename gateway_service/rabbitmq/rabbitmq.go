@@ -3,13 +3,13 @@ package rabbitmq
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/streadway/amqp"
 )
 
 type RabbitMQ struct {
 	Connection *amqp.Connection
-	Channel    *amqp.Channel
 }
 
 func NewRabbitMQ() (*RabbitMQ, error) {
@@ -20,21 +20,31 @@ func NewRabbitMQ() (*RabbitMQ, error) {
 		os.Getenv("RABBITMQ_HOST"),
 		os.Getenv("RABBITMQ_PORT"),
 	)
-	conn, err := amqp.Dial(rabbitMQURL)
-	if err != nil {
-		return nil, err
+
+	var conn *amqp.Connection
+	var err error
+
+	for {
+		conn, err = amqp.Dial(rabbitMQURL)
+		if err == nil {
+			break
+		}
+
+		fmt.Printf("Could not connect to RabbitMQ, retrying in 3 seconds: %v", err)
+		time.Sleep(3 * time.Second)
 	}
 
-	ch, err := conn.Channel()
-	if err != nil {
-		return nil, err
-	}
-
-	return &RabbitMQ{Connection: conn, Channel: ch}, nil
+	return &RabbitMQ{Connection: conn}, nil
 }
 
 func (r *RabbitMQ) SendToQueue(queueName string, msg string) error {
-	_, err := r.Channel.QueueDeclare(
+	channel, err := r.Connection.Channel()
+	if err != nil {
+		return err
+	}
+	defer channel.Close()
+
+	_, err = channel.QueueDeclare(
 		queueName, // name of the queue
 		true,      // durable
 		false,     // delete when unused
@@ -46,7 +56,7 @@ func (r *RabbitMQ) SendToQueue(queueName string, msg string) error {
 		return err
 	}
 
-	return r.Channel.Publish(
+	return channel.Publish(
 		"",
 		queueName,
 		false,

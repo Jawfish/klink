@@ -1,6 +1,6 @@
 # Klink
 
-Klink is a bookmark-sharing and link aggregation platform where users can post, vote, and tag links, as well as sort and filter through these posts.
+Klink is a bookmark-sharing and link aggregation platform where users can post and vote on links.
 
 ## About    
 
@@ -18,14 +18,16 @@ This project is designed using a microservice architecture, implementing both ED
 * **Auth Service (FastAPI)**: Handles user authentication, authorization, and identification via JWT issuance and validation.
 * **Post Service (Go + SQLite)**: Handles CRUD operations related to posts.
 * **Gateway Service (Go)**: Serves as the main entry point for the application. It is responsible for routing client requests to the appropriate service.
-* **Message Broker (RabbitMQ)**: Used for asynchronous communication between services.
-* **Tests (Postman)**: A collection of Postman tests used for E2E and integration testing.
-* **Fluentd + Elasticsearch + Kibana**: Used for logging and monitoring.
+* **RabbitMQ**: Used for asynchronous communication between services.
+* **Postman**: A collection of Postman tests used for E2E and integration testing.
+* **Fluentd**: Used for centralized logging.
 
 
 ## Deployment
 
-TODO
+1. Build the base image needed to install local modules containing shared code (schemas): `docker build -t klink:base . --no-cache`
+2. Optionally create a custom `docker-compose.yml` based on `docker-compose.test-services.yml` to override environment variables.
+3. Start up the services: `docker compose -f ./docker-compose.test-services.yml up`
 
 
 ## License

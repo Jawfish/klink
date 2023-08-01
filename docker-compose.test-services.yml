@@ -5,6 +5,8 @@ services:
   auth:
     build:
       context: ./auth_service
+    networks:
+      - klink_net
     ports:
       - "8000:8000" # ./tesexpose for access to /docs for help with testing
     environment:
@@ -19,6 +21,8 @@ services:
   user:
     build:
       context: ./user_service
+    networks:
+      - klink_net
     ports:
       - "8001:8001" # expose for access to /docs for help with testing
     environment:
@@ -35,6 +39,8 @@ services:
 
   user_db:
     image: postgres:latest
+    networks:
+      - klink_net
     environment:
       POSTGRES_USER: test
       POSTGRES_PASSWORD: test
@@ -44,6 +50,8 @@ services:
       context: ./post_service
     ports:
       - "8002:8002"
+    networks:
+      - klink_net
     environment:
       - HOST_IP=0.0.0.0
       - HOST_PORT=8002
@@ -62,8 +70,36 @@ services:
       - FLUENTD_TAG=post
       - LOG_TO_STDOUT=false
 
+  gateway:
+    build:
+      context: ./gateway_service
+    ports:
+      - "8003:8003"
+    networks:
+      - klink_net
+    environment:
+      - HOST_IP=0.0.0.0
+      - HOST_PORT=8003
+      - AUTH_SERVICE_PORT=8000
+      - AUTH_SERVICE_HOST=auth
+      - USER_SERVICE_HOST=user
+      - USER_SERVICE_PORT=8001
+      - POST_SERVICE_HOST=post
+      - POST_SERVICE_PORT=8002
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=test
+      - RABBITMQ_PASS=test
+      - RABBITMQ_POST_SERVICE_QUEUE=post
+      - FLUENTD_HOST=fluentd
+      - FLUENTD_PORT=24224
+      - FLUENTD_TAG=post
+      - LOG_TO_STDOUT=false
+
   fluentd:
     image: fluent/fluentd:v1.16
+    networks:
+      - klink_net
     volumes:
       - $PWD/fluentd:/fluentd/etc
     ports:
@@ -72,6 +108,8 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.10-management
+    networks:
+      - klink_net
     environment:
       - RABBITMQ_DEFAULT_USER=test
       - RABBITMQ_DEFAULT_PASS=test

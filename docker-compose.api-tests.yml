@@ -5,9 +5,13 @@ services:
   postman:
     build:
       context: ./postman
+    networks:
+      - klink_net
     environment:
       - AUTH_SERVICE_URL=auth:8000
       - USER_SERVICE_URL=user:8001
+      - POST_SERVICE_URL=post:8002
+      - GATEWAY_SERVICE_URL=gateway:8003
 
 networks:
   klink_net:
