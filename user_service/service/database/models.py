@@ -37,3 +37,6 @@ class User(Base):
             uuid=str(self.uuid),
             hashed_password=self.hashed_password,
         )
+
+    def to_username(self) -> str:
+        return {"username": self.username}

@@ -28,6 +28,21 @@ def create_user(
     return user.to_identity()
 
 
+@router.get("/users/{uuid}/", status_code=HTTPStatus.OK)
+def get_user_username(
+    uuid: str,
+    user_handler: UserHandler = Depends(get_user_handler),
+) -> dict:
+    """Retrieve the username of a user from their uuid."""
+    logging.info("Endpoint called: get_user_username for user %s", uuid)
+    user = user_handler.get_by_uuid(uuid)
+
+    if user is None:
+        raise UserDoesNotExistError
+
+    return user.to_username()
+
+
 @router.get("/auth/{username}/", status_code=HTTPStatus.OK)
 def get_user_auth_data(
     username: str,

@@ -28,6 +28,24 @@ def test_existing_user_prevents_new_user_creation(
     assert response.status_code == ex.UserAlreadyExistsError.status_code
 
 
+def test_user_retrieval_by_uuid_returns_username(
+    db: Session,
+    client: TestClient,
+    create_user_payload: CreateUserRequest,
+) -> None:
+    user_handler = UserHandler(db)
+    user = user_handler.create_user(create_user_payload)
+    user_uuid = str(user.uuid)
+
+    response = client.get(
+        f"/users/{user_uuid}/",
+    )
+    data = response.json()
+
+    assert response.status_code == HTTPStatus.OK
+    assert data["username"] == create_user_payload.username
+
+
 def test_user_retrieval_succeeds_if_user_exists(
     db: Session,
     client: TestClient,
