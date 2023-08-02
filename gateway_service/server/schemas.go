@@ -1,6 +1,6 @@
 package server
 
-type Post struct {
+type PostOut struct {
 	PostUUID  string `json:"post_uuid"`
 	Author    string `json:"author"`
 	VoteCount int    `json:"vote_count"`

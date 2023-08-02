@@ -2,10 +2,12 @@ package server
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"service/rabbitmq"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -51,9 +53,43 @@ func handleAuth(c *gin.Context) {
 	proxyRequest(c, os.Getenv("AUTH_SERVICE_HOST"), os.Getenv("AUTH_SERVICE_PORT"))
 }
 
-func getPosts(serviceHost string, servicePort string) ([]Post, error) {
+func getUsername(serviceHost string, servicePort string, uuid string) (string, error) {
+	type UsernameIn struct {
+		Username string `json:"username"`
+	}
+
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "http://"+serviceHost+":"+servicePort+"/posts", nil)
+	url := "http://" + serviceHost + ":" + servicePort + "/users/" + uuid
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	log.Println("URL: ", url)
+	log.Println("UUID: ", uuid)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	bodyString := string(bodyBytes)
+	log.Println("Response Body: ", bodyString)
+
+	var user UsernameIn
+	err = json.NewDecoder(strings.NewReader(bodyString)).Decode(&user)
+	if err != nil {
+		return "", err
+	}
+
+	return user.Username, nil
+}
+
+func getPosts(postServiceHost string, postServicePort string, userServiceHost string, userServicePort string) ([]PostOut, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", "http://"+postServiceHost+":"+postServicePort+"/posts", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -64,49 +100,49 @@ func getPosts(serviceHost string, servicePort string) ([]Post, error) {
 	}
 	defer resp.Body.Close()
 
-	var posts []Post
-	err = json.NewDecoder(resp.Body).Decode(&posts)
+	type PostIn struct {
+		PostUUID    string `json:"post_uuid"`
+		CreatorUUID string `json:"creator_uuid"`
+		VoteCount   int    `json:"vote_count"`
+		Title       string `json:"title"`
+		URL         string `json:"url"`
+		CreatedAt   string `json:"created_at"`
+	}
+
+	var postResponses []PostIn
+	err = json.NewDecoder(resp.Body).Decode(&postResponses)
 	if err != nil {
 		return nil, err
+	}
+
+	var posts []PostOut
+	for _, postResponse := range postResponses {
+		// sub-optimal, because a request is made for each post
+		username, err := getUsername(userServiceHost, userServicePort, postResponse.CreatorUUID)
+		if err != nil {
+			return nil, err
+		}
+
+		post := PostOut{
+			PostUUID:  postResponse.PostUUID,
+			Author:    username,
+			VoteCount: postResponse.VoteCount,
+			Title:     postResponse.Title,
+			URL:       postResponse.URL,
+			CreatedAt: postResponse.CreatedAt,
+		}
+
+		posts = append(posts, post)
 	}
 
 	return posts, nil
 }
 
 func handleGetPosts(c *gin.Context) {
-	posts, err := getPosts(os.Getenv("POST_SERVICE_HOST"), os.Getenv("POST_SERVICE_PORT"))
+	posts, err := getPosts(os.Getenv("POST_SERVICE_HOST"), os.Getenv("POST_SERVICE_PORT"), os.Getenv("USER_SERVICE_HOST"), os.Getenv("USER_SERVICE_PORT"))
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
-	}
-
-	client := &http.Client{}
-
-	serviceHost := os.Getenv("USER_SERVICE_HOST")
-	servicePort := os.Getenv("USER_SERVICE_PORT")
-
-	for i, post := range posts {
-		req, err := http.NewRequest("GET", "http://"+serviceHost+":"+servicePort+"/users/"+post.PostUUID, nil)
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
-
-		resp, err := client.Do(req)
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
-		defer resp.Body.Close()
-
-		var username map[string]string
-		err = json.NewDecoder(resp.Body).Decode(&username)
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
-
-		posts[i].Author = username["username"]
 	}
 
 	c.JSON(200, posts)
